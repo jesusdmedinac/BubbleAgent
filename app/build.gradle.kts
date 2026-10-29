@@ -86,4 +86,8 @@ dependencies {
   // ML Kit GenAI (Gemini Nano)
   implementation(libs.mlkit.genai.prompt)
   implementation(libs.mlkit.genai.agent)
+
+  // Android AppFunctions (MCP)
+  implementation(libs.androidx.appfunctions)
+  implementation(libs.androidx.appfunctions.service)
 }

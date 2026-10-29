@@ -1,15 +1,37 @@
-*.iml
-.gradle
+# Built application files
+*.apk
+*.aar
+*.aab
+
+# Gradle files
+.gradle/
+build/
+app/build/
+
+# Local configuration
+local.properties
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+
+# Log files
+*.log
+
+# OS files
 .DS_Store
-/build
-/captures
+Thumbs.db
+
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/
+!.idea/codeStyles/
+!.idea/copyright/
+
+# Native build
 .externalNativeBuild
 .cxx
-local.properties
+
+# Temporary and skill extraction archives
+all-skills/
+all-skills.zip
+app-project/
+*.png
+!app/src/main/res/**/*.png

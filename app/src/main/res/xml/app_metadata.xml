@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:description="Bubble is a proactive digital wellbeing companion that helps users break screen addiction and doomscrolling loops.
+    OPERATIONAL PATTERNS:
+    - ALWAYS call 'getDigitalHealthSnapshot' first to inspect total screen time accumulation and continuous scrolling streaks before making an intervention.
+    - Call 'getUserOfflineInterests' to retrieve the user's authentic passions and offline goals (such as acoustic guitar, outdoor walks, books, fitness).
+    - Call 'saveRecommendedActivity' ONLY to log a concrete real-world activity agreed upon to replace idle screen time.
+    CONSTRAINTS:
+    - Never recommend activities that involve digital screens or mobile apps.
+    - Recommend activities between 15 and 45 minutes matching the user's preferred duration."
+    appfn:displayDescription="@string/app_description" />
