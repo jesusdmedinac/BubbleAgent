@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.ksp)
 }
 
 android {
@@ -86,4 +87,8 @@ dependencies {
   // ML Kit GenAI (Gemini Nano)
   implementation(libs.mlkit.genai.prompt)
   implementation(libs.mlkit.genai.agent)
+
+  // AppFunctions (Android MCP Server)
+  implementation(libs.androidx.appfunctions)
+  ksp(libs.androidx.appfunctions.compiler)
 }

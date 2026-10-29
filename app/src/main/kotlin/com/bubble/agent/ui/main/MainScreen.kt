@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.GraphicEq
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -56,18 +58,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bubble.agent.R
+import com.bubble.agent.ai.GeminiNanoAiEngine
+import com.bubble.agent.data.model.DigitalHealthSnapshot
+import com.bubble.agent.data.model.RecommendedActivity
 import com.bubble.agent.ui.theme.BgAmoled
 import com.bubble.agent.ui.theme.BubbleCyan
 import com.bubble.agent.ui.theme.BubbleCyan10
@@ -86,9 +93,6 @@ import com.bubble.agent.ui.theme.SurfaceContainerLow
 import com.bubble.agent.ui.theme.TextPrimary
 import com.bubble.agent.ui.theme.TextSecondary
 
-import androidx.compose.ui.platform.LocalContext
-import com.bubble.agent.ai.GeminiNanoAiEngine
-
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -98,11 +102,13 @@ fun MainScreen(
     }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val healthSnapshot by viewModel.digitalHealthSnapshot.collectAsStateWithLifecycle()
+    val activities by viewModel.recommendedActivities.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(uiState.messages.size - 1)
+            listState.animateScrollToItem(listState.layoutInfo.totalItemsCount.coerceAtLeast(1) - 1)
         }
     }
 
@@ -112,7 +118,7 @@ fun MainScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             BubbleTopAppBar(
-                onMenuClick = { /* Drawer / menu action */ },
+                onMenuClick = { viewModel.onRefreshUsageStats() },
                 onModelSelect = { /* Model tier selector */ },
                 onNewChat = { viewModel.onNewChatClicked() },
                 onProfileClick = { /* Profile settings */ },
@@ -127,35 +133,427 @@ fun MainScreen(
             )
         }
     ) { innerPadding ->
-        Box(
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
+                .padding(innerPadding)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+
+            // 1. Top Section: Digital Health Snapshot Card
+            item {
+                DigitalHealthCard(
+                    snapshot = healthSnapshot,
+                    onOpenSettingsClick = { viewModel.onOpenUsageSettings(context) }
+                )
+            }
+
+            // 2. Middle Section: Recommended Activities from Gemini (Android MCP / AppFunctions)
+            item {
+                RecommendedActivitiesSection(
+                    activities = activities,
+                    onToggleActivity = { viewModel.onToggleActivityCompleted(it) },
+                    onSimulateMcpClick = { viewModel.simulateGeminiMcpInvocation() }
+                )
+            }
+
+            // 3. Conversation Section Header / Empty Greeting
             if (uiState.messages.isEmpty()) {
-                EmptyChatCanvas(userName = uiState.userName)
+                item {
+                    EmptyChatCanvas(
+                        userName = uiState.userName,
+                        onStarterClick = { starter ->
+                            viewModel.onInputTextChanged(starter)
+                            viewModel.sendMessage()
+                        }
+                    )
+                }
             } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(1.dp)
+                                .background(GlassWhite06)
+                        )
+                        Text(
+                            text = "CHAT CON BUBBLE AGENT",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
+                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(1.dp)
+                                .background(GlassWhite06)
+                        )
+                    }
+                }
+
+                items(uiState.messages, key = { it.id }) { msg ->
+                    when (msg.sender) {
+                        MessageSender.USER -> UserMessageBubble(message = msg)
+                        MessageSender.BUBBLE -> BubbleAssistantMessage(message = msg)
+                    }
+                }
+                if (uiState.isGenerating) {
+                    item {
+                        GeneratingIndicator()
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+        }
+    }
+}
+
+@Composable
+fun DigitalHealthCard(
+    snapshot: DigitalHealthSnapshot,
+    onOpenSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(SurfaceContainerLow)
+            .border(1.dp, GlassWhite12, RoundedCornerShape(20.dp))
+            .padding(16.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Header Row: Title + Live/Mock chip
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
-                    items(uiState.messages, key = { it.id }) { msg ->
-                        when (msg.sender) {
-                            MessageSender.USER -> UserMessageBubble(message = msg)
-                            MessageSender.BUBBLE -> BubbleAssistantMessage(message = msg)
-                        }
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(BubbleCyan15),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Schedule,
+                            contentDescription = null,
+                            tint = BubbleCyan,
+                            modifier = Modifier.size(15.dp)
+                        )
                     }
-                    if (uiState.isGenerating) {
-                        item {
-                            GeneratingIndicator()
-                        }
+                    Text(
+                        text = "Tiempo de Pantalla Hoy",
+                        color = TextPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+
+                if (!snapshot.isPermissionGranted) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BubbleCyan10)
+                            .border(1.dp, BubbleCyan20, RoundedCornerShape(12.dp))
+                            .clickable { onOpenSettingsClick() }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Demo • Conceder Acceso",
+                            color = BubbleCyan,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = FontFamily.SansSerif
+                        )
                     }
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(GlassWhite05)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "En Vivo (UsageStats)",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = FontFamily.SansSerif
+                        )
+                    }
+                }
+            }
+
+            // Stats Row: Total vs Recoverable
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column {
+                    Text(
+                        text = "${snapshot.totalScreenTimeMinutes / 60}h ${snapshot.totalScreenTimeMinutes % 60}m",
+                        color = TextPrimary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                    Text(
+                        text = "Consumo total",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "${snapshot.potentialRecoverableMinutes / 60}h ${snapshot.potentialRecoverableMinutes % 60}m",
+                        color = BubbleCyan,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                    Text(
+                        text = "Tiempo potencial recuperable",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            }
+
+            // Top apps badges
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                snapshot.topApps.take(4).forEach { app ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(SurfaceContainerHigh)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${app.appName} ${app.usageMinutes}m",
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = FontFamily.SansSerif
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendedActivitiesSection(
+    activities: List<RecommendedActivity>,
+    onToggleActivity: (String) -> Unit,
+    onSimulateMcpClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.AutoAwesome,
+                    contentDescription = null,
+                    tint = BubbleCyan,
+                    modifier = Modifier.size(15.dp)
+                )
+                Text(
+                    text = "Actividades Sugeridas (Gemini MCP)",
+                    color = TextPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.SansSerif
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BubbleCyan15)
+                    .border(1.dp, BubbleCyan33, RoundedCornerShape(12.dp))
+                    .clickable { onSimulateMcpClick() }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = null,
+                    tint = BubbleCyan,
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = "Simular MCP",
+                    color = BubbleCyan,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.SansSerif
+                )
+            }
+        }
+
+        if (activities.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SurfaceContainerLow)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Aún no hay actividades guardadas. Habla con Bubble o envía una recomendación vía AppFunctions MCP.",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            activities.forEach { activity ->
+                RecommendedActivityCard(
+                    activity = activity,
+                    onToggle = { onToggleActivity(activity.id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendedActivityCard(
+    activity: RecommendedActivity,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(SurfaceContainerLow)
+            .border(
+                1.dp,
+                if (activity.isCompleted) GlassWhite06 else GlassWhite12,
+                RoundedCornerShape(16.dp)
+            )
+            .clickable { onToggle() }
+            .padding(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            // Checkbox indicator
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .background(if (activity.isCompleted) BubbleCyan else GlassWhite06)
+                    .border(
+                        1.dp,
+                        if (activity.isCompleted) BubbleCyan else GlassWhite16,
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (activity.isCompleted) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "Completed",
+                        tint = BgAmoled,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(BubbleCyan10)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = activity.category,
+                            color = BubbleCyan,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+
+                    Text(
+                        text = "${activity.estimatedMinutes} min",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+
+                Text(
+                    text = activity.title,
+                    color = if (activity.isCompleted) TextSecondary else TextPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.SansSerif,
+                    textDecoration = if (activity.isCompleted) TextDecoration.LineThrough else null
+                )
+
+                if (activity.reason.isNotEmpty()) {
+                    Text(
+                        text = activity.reason,
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
                 }
             }
         }
@@ -273,39 +671,40 @@ fun BubbleTopAppBar(
 @Composable
 fun EmptyChatCanvas(
     userName: String,
+    onStarterClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Large Emblem (68x68 circle)
+        // Emblem
         Image(
             painter = painterResource(id = R.drawable.logo_bubble_phone),
             contentDescription = "Bubble Logo",
             modifier = Modifier
-                .size(68.dp)
+                .size(54.dp)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Greeting Headline
         Text(
-            text = "Hi $userName,\nwhat's on your mind?",
+            text = "Hola $userName,\n¿qué actividad offline priorizamos hoy?",
             color = TextPrimary,
-            fontSize = 24.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.SansSerif,
             textAlign = TextAlign.Center,
-            lineHeight = 31.sp
+            lineHeight = 26.sp
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Privacy Chip
         Row(
@@ -324,12 +723,43 @@ fun EmptyChatCanvas(
                 modifier = Modifier.size(12.dp)
             )
             Text(
-                text = "Local First • 100% Private chat",
+                text = "Gemini Nano On-Device • 100% Privado",
                 color = BubbleCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.SansSerif
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Quick starter prompts
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            listOf(
+                "Quiero aprender acordes básicos de guitarra acústica",
+                "¿Cómo reduzco mi tiempo en Instagram hoy?",
+                "Sugiere una actividad offline de 20 minutos"
+            ).forEach { starter ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(SurfaceContainerLow)
+                        .border(1.dp, GlassWhite06, RoundedCornerShape(12.dp))
+                        .clickable { onStarterClick(starter) }
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = starter,
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            }
         }
     }
 }
@@ -453,11 +883,15 @@ fun AssistantActionButton(
 }
 
 @Composable
-fun GeneratingIndicator() {
+fun GeneratingIndicator(
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier.padding(start = 28.dp, top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier
+            .padding(start = 28.dp)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Box(
             modifier = Modifier
@@ -466,8 +900,8 @@ fun GeneratingIndicator() {
                 .background(BubbleCyan)
         )
         Text(
-            text = "Bubble local thinking...",
-            color = BubbleCyan,
+            text = "Generando respuesta local...",
+            color = TextSecondary,
             fontSize = 12.sp,
             fontFamily = FontFamily.SansSerif
         )
@@ -482,54 +916,76 @@ fun BottomInteractiveStack(
     onSend: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val density = LocalDensity.current
-    val isKeyboardOpen = WindowInsets.ime.getBottom(density) > 0
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .imePadding()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = if (isKeyboardOpen) 10.dp else 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(bottom = if (isImeVisible) 10.dp else 12.dp)
+            .padding(horizontal = 16.dp)
+            .then(
+                if (!isImeVisible) Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                else Modifier
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        // Floating AI Prompt Bar
+        FloatingPromptBar(
+            inputText = inputText,
+            onInputChanged = onInputChanged,
+            onSend = onSend
+        )
+    }
+}
+
+@Composable
+fun FloatingPromptBar(
+    inputText: String,
+    onInputChanged: (String) -> Unit,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(26.dp))
+            .background(FloatingBarBg)
+            .border(1.dp, GlassWhite12, RoundedCornerShape(26.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(32.dp))
-                .background(FloatingBarBg)
-                .border(1.dp, GlassWhite16, RoundedCornerShape(32.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Plus Button
+            // Plus Button (Attach/Context)
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
+                    .background(GlassWhite06)
                     .clickable { /* Attach */ },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = "Add attachment",
-                    tint = TextSecondary,
+                    contentDescription = "Attach",
+                    tint = TextPrimary,
                     modifier = Modifier.size(18.dp)
                 )
             }
 
-            // Input Text Field
+            // Input Field with Prompt Placeholder
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 4.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 if (inputText.isEmpty()) {
                     Text(
-                        text = "Ask Bubble...",
+                        text = "Pregunta a Bubble...",
                         color = TextSecondary,
                         fontSize = 14.sp,
                         fontFamily = FontFamily.SansSerif
@@ -544,14 +1000,30 @@ fun BottomInteractiveStack(
                         fontFamily = FontFamily.SansSerif
                     ),
                     cursorBrush = SolidColor(BubbleCyan),
-                    singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSend() }),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            // Right Group: Mic & Live AI Call or Send Button
+            // Voice / Mic Button
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(GlassWhite06)
+                    .clickable { /* Voice Input */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Mic,
+                    contentDescription = "Voice Dictation",
+                    tint = TextPrimary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            // Live / Audio Wave Button or Send Button
             AnimatedVisibility(
                 visible = inputText.isNotBlank(),
                 enter = fadeIn(),
@@ -559,7 +1031,7 @@ fun BottomInteractiveStack(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(BubbleCyan)
                         .clickable { onSend() },
@@ -569,7 +1041,7 @@ fun BottomInteractiveStack(
                         imageVector = Icons.AutoMirrored.Rounded.Send,
                         contentDescription = "Send Message",
                         tint = BgAmoled,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(17.dp)
                     )
                 }
             }
@@ -579,53 +1051,22 @@ fun BottomInteractiveStack(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(GlassWhite06)
+                        .clickable { /* Audio Live Mode */ },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .clickable { /* Voice input */ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Mic,
-                            contentDescription = "Voice Input",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(BubbleCyan15)
-                            .border(1.dp, BubbleCyan33, CircleShape)
-                            .clickable { /* Live AI Call */ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.GraphicEq,
-                            contentDescription = "Live AI Call",
-                            tint = BubbleCyan,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Rounded.GraphicEq,
+                        contentDescription = "Live Audio Session",
+                        tint = BubbleCyan,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
-
-        if (!isKeyboardOpen) {
-            Spacer(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars))
-        }
     }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-fun MainScreenPreview() {
-    MainScreen()
 }
