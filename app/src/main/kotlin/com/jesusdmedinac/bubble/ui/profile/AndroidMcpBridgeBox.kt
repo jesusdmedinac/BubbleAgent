@@ -65,24 +65,8 @@ fun AndroidMcpBridgeBox(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            ToolBadge(tool = "search_store_apps", modifier = Modifier.weight(1f))
-            ToolBadge(tool = "list_mindful_apps", modifier = Modifier.weight(1f))
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            ToolBadge(tool = "get_app_details", modifier = Modifier.weight(1f))
-            ToolBadge(tool = "launch_store_app", modifier = Modifier.weight(1f))
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            ToolBadge(tool = "get_screen_time", modifier = Modifier.weight(1f))
-            ToolBadge(tool = "save_activity", modifier = Modifier.weight(1f))
+            ToolBadge(tool = "read_user_profile", modifier = Modifier.weight(1f))
+            ToolBadge(tool = "save_user_profile", modifier = Modifier.weight(1f))
         }
 
         Text(
