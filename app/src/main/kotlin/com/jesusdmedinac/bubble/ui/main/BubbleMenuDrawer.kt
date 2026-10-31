@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +59,7 @@ fun BubbleMenuDrawer(
     onRecentQueryClick: (String) -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    recentQueries: List<String> = emptyList(),
     userName: String = "Jesús Medina",
     userPlan: String = "Pro Account",
     modifier: Modifier = Modifier
@@ -202,25 +204,30 @@ fun BubbleMenuDrawer(
                     fontFamily = FontFamily.SansSerif
                 )
 
-                val recentQueries = listOf(
-                    "How to reduce Instagram screen time?",
-                    "4-7-8 breathing exercise for focus",
-                    "Overcoming phone check anxiety",
-                    "Digital detox bedtime routine"
-                )
-
-                recentQueries.forEach { query ->
+                if (recentQueries.isEmpty()) {
                     Text(
-                        text = query,
-                        color = TextSecondary,
+                        text = "Sin conversaciones recientes",
+                        color = TextMuted,
                         fontSize = 12.sp,
                         fontFamily = FontFamily.SansSerif,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .clickable { onRecentQueryClick(query) }
-                            .padding(vertical = 4.dp, horizontal = 2.dp)
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
                     )
+                } else {
+                    recentQueries.forEach { query ->
+                        Text(
+                            text = query,
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontFamily = FontFamily.SansSerif,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { onRecentQueryClick(query) }
+                                .padding(vertical = 4.dp, horizontal = 2.dp)
+                        )
+                    }
                 }
             }
         }

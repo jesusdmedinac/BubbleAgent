@@ -25,6 +25,7 @@ import java.util.UUID
 
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
+    val recentQueries: List<String> = emptyList(),
     val inputText: String = "",
     val isGenerating: Boolean = false,
     val selectedTab: Int = 2,
@@ -47,8 +48,16 @@ class MainScreenViewModel(
         _isGenerating,
         _showDashboardHeader
     ) { messages, inputText, isGenerating, showDashboardHeader ->
+        val recents = messages
+            .filter { it.sender == MessageSender.USER && it.text.isNotBlank() }
+            .map { it.text }
+            .distinct()
+            .reversed()
+            .take(5)
+
         ChatUiState(
             messages = messages,
+            recentQueries = recents,
             inputText = inputText,
             isGenerating = isGenerating,
             selectedTab = 2,

@@ -125,6 +125,7 @@ fun MainScreen(
             },
             userName = uiState.userName,
             userPlan = "Pro Account",
+            recentQueries = uiState.recentQueries,
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .windowInsetsPadding(WindowInsets.navigationBars)

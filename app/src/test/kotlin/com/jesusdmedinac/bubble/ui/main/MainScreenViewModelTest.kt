@@ -1,6 +1,6 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import com.jesusdmedinac.bubble.ai.MockAiEngine
+import com.jesusdmedinac.bubble.ai.BubbleAiEngine
 import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.data.model.MessageSender
@@ -11,13 +11,22 @@ import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+
+class ImmediateAiEngine : BubbleAiEngine {
+    override fun streamChat(userPrompt: String): Flow<String> = flow {
+        emit("Mock response")
+    }
+    override fun close() {}
+}
 
 class FakeBubbleRepository : BubbleRepository {
     private val _offlineProfile = MutableStateFlow(OfflineProfile())
@@ -105,7 +114,7 @@ class MainScreenViewModelTest {
 
     private fun createViewModel(): MainScreenViewModel {
         return MainScreenViewModel(
-            aiEngine = MockAiEngine(),
+            aiEngine = ImmediateAiEngine(),
             repository = FakeBubbleRepository()
         )
     }
@@ -132,7 +141,7 @@ class MainScreenViewModelTest {
         viewModel.onInputTextChanged("Tocar guitarra")
         viewModel.onSendMessage()
 
-        val state = viewModel.uiState.first { it.messages.size >= 2 }
+        val state = viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating }
         assertEquals("", state.inputText)
         assertEquals(2, state.messages.size)
         assertEquals(MessageSender.USER, state.messages[0].sender)
@@ -145,13 +154,27 @@ class MainScreenViewModelTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Mensaje 1")
         viewModel.onSendMessage()
-        viewModel.uiState.first { it.messages.size >= 2 }
+        viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating }
 
         viewModel.onNewChatClicked()
 
         val state = viewModel.uiState.first { it.messages.isEmpty() && it.inputText.isEmpty() }
         assertTrue(state.messages.isEmpty())
         assertEquals("", state.inputText)
+    }
+
+    @Test
+    fun uiState_recentQueries_extractsUserQueries() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onInputTextChanged("Cómo reducir screen time")
+        viewModel.onSendMessage()
+        viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating }
+
+        viewModel.onInputTextChanged("Aprender piano")
+        viewModel.onSendMessage()
+        val state = viewModel.uiState.first { it.recentQueries.size == 2 && !it.isGenerating }
+
+        assertEquals(listOf("Aprender piano", "Cómo reducir screen time"), state.recentQueries)
     }
 
     @Test
