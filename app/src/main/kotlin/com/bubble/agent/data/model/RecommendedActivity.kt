@@ -8,10 +8,10 @@ import java.util.UUID
  */
 data class RecommendedActivity(
     val id: String = UUID.randomUUID().toString(),
-    val title: String,
-    val category: String,
-    val estimatedMinutes: Int,
-    val reason: String,
+    val title: String = "",
+    val category: String = "",
+    val estimatedMinutes: Int = 0,
+    val reason: String = "",
     val timestamp: Long = System.currentTimeMillis(),
     val isCompleted: Boolean = false
 )

@@ -113,7 +113,7 @@ class MainScreenViewModel(
         )
     }
 
-    fun sendMessage() {
+    fun onSendMessage() {
         val query = _uiState.value.inputText.trim()
         if (query.isEmpty() || _uiState.value.isGenerating) return
 

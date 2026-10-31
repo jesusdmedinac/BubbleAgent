@@ -13,9 +13,9 @@ data class AppUsageStat(
  * Snapshot of daily digital consumption versus reclaimable real-world time.
  */
 data class DigitalHealthSnapshot(
-    val totalScreenTimeMinutes: Long,
-    val potentialRecoverableMinutes: Long,
-    val topApps: List<AppUsageStat>,
-    val isPermissionGranted: Boolean,
-    val offlineInterests: List<String>
+    val totalScreenTimeMinutes: Long = 0L,
+    val potentialRecoverableMinutes: Long = 0L,
+    val topApps: List<AppUsageStat> = emptyList(),
+    val isPermissionGranted: Boolean = false,
+    val offlineInterests: List<String> = emptyList(),
 )
