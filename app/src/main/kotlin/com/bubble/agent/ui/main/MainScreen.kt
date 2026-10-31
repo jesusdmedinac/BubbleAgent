@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -36,8 +37,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bubble.agent.ai.GeminiNanoAiEngine
+import com.bubble.agent.data.model.DigitalHealthSnapshot
 import com.bubble.agent.ui.theme.BgAmoled
 import com.bubble.agent.ui.theme.BubbleCyan
+import com.bubble.agent.ui.theme.BubbleTheme
 
 @Composable
 fun MainScreen(
@@ -181,6 +184,32 @@ fun MainScreen(
                         }
                 )
             }
+        }
+    }
+}
+
+@Preview(name = "MainScreen Preview", showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    BubbleTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BgAmoled)
+        ) {
+            MainScreenContent(
+                uiState = ChatUiState(),
+                listState = rememberLazyListState(),
+                modifier = Modifier.fillMaxSize(),
+                onRefreshUsageStats = {},
+                onModelSelect = {},
+                onNewChat = {},
+                onProfileClick = {},
+                onInputChanged = {},
+                onSendMessage = {},
+                healthSnapshot = DigitalHealthSnapshot(),
+                activities = emptyList()
+            )
         }
     }
 }

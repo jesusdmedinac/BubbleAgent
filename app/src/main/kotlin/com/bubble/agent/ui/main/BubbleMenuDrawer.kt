@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +38,6 @@ import androidx.compose.ui.unit.sp
 import com.bubble.agent.ui.theme.AccentGold
 import com.bubble.agent.ui.theme.BgAmoled
 import com.bubble.agent.ui.theme.BubbleCyan
-import com.bubble.agent.ui.theme.BubbleCyan15
 import com.bubble.agent.ui.theme.BubbleTheme
 import com.bubble.agent.ui.theme.Gold20
 import com.bubble.agent.ui.theme.TextMuted
@@ -310,66 +306,7 @@ fun BubbleMenuDrawer(
     }
 }
 
-@Composable
-private fun DrawerNavigationLink(
-    icon: ImageVector,
-    title: String,
-    iconTint: Color,
-    titleColor: Color,
-    badge: (@Composable () -> Unit)? = null,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(18.dp)
-            )
-            Text(
-                text = title,
-                color = titleColor,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.SansSerif
-            )
-        }
-
-        badge?.invoke()
-    }
-}
-
-@Composable
-private fun ComingSoonBadge() {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(BubbleCyan15)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text = "Coming soon",
-            color = BubbleCyan,
-            fontSize = 9.sp,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.SansSerif
-        )
-    }
-}
-
-@Preview
+@Preview(name = "BubbleMenuDrawer Preview", showBackground = true)
 @Composable
 fun BubbleMenuDrawerPreview() {
     BubbleTheme {

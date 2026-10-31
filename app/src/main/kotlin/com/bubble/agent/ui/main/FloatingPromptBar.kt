@@ -1,15 +1,11 @@
 package com.bubble.agent.ui.main
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,9 +15,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -143,65 +137,5 @@ fun FloatingPromptBarPreview() {
             onInputChanged = {},
             onSend = {}
         )
-    }
-}
-
-@Composable
-private fun RowScope.LiveAudioWaveOrSendButton(
-    inputText: String,
-    onSend: () -> Unit
-) {
-    AnimatedVisibility(
-        visible = inputText.isNotBlank(),
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(BubbleCyan)
-                .clickable { onSend() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.Send,
-                contentDescription = "Send Message",
-                tint = BgAmoled,
-                modifier = Modifier.size(17.dp)
-            )
-        }
-    }
-
-    AnimatedVisibility(
-        visible = inputText.isBlank(),
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(GlassWhite06)
-                .clickable { /* Audio Live Mode */ },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.GraphicEq,
-                contentDescription = "Live Audio Session",
-                tint = BubbleCyan,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-    }
-}
-
-@Composable
-@Preview
-fun LiveAudioWaveOrSendButtonPreview() {
-    BubbleTheme {
-        Row {
-            LiveAudioWaveOrSendButton(inputText = "", onSend = {})
-        }
     }
 }
