@@ -1,6 +1,10 @@
 package com.bubble.agent.ui.profile
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,14 +46,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -363,6 +374,142 @@ private fun TelemetryPill(
     }
 }
 
+data class DonutSegment(
+    val label: String,
+    val valueMinutes: Long,
+    val color: Color,
+    val sweepAngle: Float
+)
+
+@Composable
+private fun InteractiveDonutChart(
+    segments: List<DonutSegment>,
+    centerTimeText: String,
+    centerSubtitleText: String = "Hoy en pantalla",
+    modifier: Modifier = Modifier,
+    size: Dp = 144.dp,
+    strokeWidth: Dp = 18.dp
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+        label = "donut_sweep_animation"
+    )
+
+    Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        val density = LocalDensity.current
+        val strokeWidthPx = with(density) { strokeWidth.toPx() }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val canvasSize = this.size.minDimension
+            val radius = (canvasSize - strokeWidthPx) / 2f
+            val topLeft = Offset(
+                (this.size.width - radius * 2f) / 2f,
+                (this.size.height - radius * 2f) / 2f
+            )
+            val arcSize = Size(radius * 2f, radius * 2f)
+
+            // Background track
+            drawArc(
+                color = Color(0xFF1E1E24),
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx)
+            )
+
+            // Segments starting at -90 degrees (12 o'clock / top)
+            var currentAngle = -90f
+            for (segment in segments) {
+                val sweep = segment.sweepAngle * animatedProgress
+                if (sweep > 0.5f) {
+                    drawArc(
+                        color = segment.color,
+                        startAngle = currentAngle,
+                        sweepAngle = sweep,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Butt)
+                    )
+                }
+                currentAngle += segment.sweepAngle
+            }
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = centerTimeText,
+                color = TextPrimary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.SansSerif
+            )
+            Text(
+                text = centerSubtitleText,
+                color = TextSecondary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily.SansSerif
+            )
+        }
+    }
+}
+
+@Composable
+private fun DonutLegendRow(
+    segments: List<DonutSegment>,
+    modifier: Modifier = Modifier
+) {
+    val validSegments = segments.filter { it.valueMinutes > 0L }
+    val chunkSize = if (validSegments.size > 3) 2 else 3
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        validSegments.chunked(chunkSize).forEach { rowSegments ->
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                rowSegments.forEach { segment ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(segment.color)
+                        )
+                        Text(
+                            text = "${segment.label} ${segment.valueMinutes}m",
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = FontFamily.SansSerif,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun ScreenTimeCard(
     hours: Long,
@@ -373,6 +520,60 @@ private fun ScreenTimeCard(
     isPermissionGranted: Boolean,
     onOpenSettingsClick: () -> Unit
 ) {
+    val totalMinutes = hours * 60 + minutes
+    val segments = remember(topApps, totalMinutes, isPermissionGranted) {
+        if (totalMinutes <= 0L) {
+            listOf(
+                DonutSegment("Sin uso", 0L, Color(0xFF2A2A30), 360f)
+            )
+        } else if (topApps.isEmpty() || !isPermissionGranted) {
+            // Exact 360-degree closed distribution matching bubble-system.pen
+            listOf(
+                DonutSegment("Bubble", 75L, BubbleCyan, 202f),
+                DonutSegment("Social", 42L, Color(0xFFFF6B4A), 113f),
+                DonutSegment("Otras", 17L, Color(0xFFF5A623), 45f)
+            )
+        } else {
+            val colors = listOf(BubbleCyan, Color(0xFFFF6B4A), Color(0xFFF5A623), Color(0xFF5C8DEF))
+            val top3 = topApps.take(3)
+            val topSum = top3.sumOf { it.usageMinutes }
+            val remaining = (totalMinutes - topSum).coerceAtLeast(0L)
+
+            val list = mutableListOf<DonutSegment>()
+            var accumulatedAngle = 0f
+
+            top3.forEachIndexed { idx, app ->
+                val fraction = if (totalMinutes > 0) app.usageMinutes.toFloat() / totalMinutes.toFloat() else 0f
+                val angle = fraction * 360f
+                accumulatedAngle += angle
+                list.add(
+                    DonutSegment(
+                        label = app.appName.take(10),
+                        valueMinutes = app.usageMinutes,
+                        color = colors.getOrElse(idx) { BubbleCyan },
+                        sweepAngle = angle
+                    )
+                )
+            }
+
+            if (remaining > 0L) {
+                val remAngle = (360f - accumulatedAngle).coerceAtLeast(0f)
+                list.add(
+                    DonutSegment(
+                        label = "Otras",
+                        valueMinutes = remaining,
+                        color = colors[3],
+                        sweepAngle = remAngle
+                    )
+                )
+            } else if (list.isNotEmpty()) {
+                val last = list.removeAt(list.size - 1)
+                list.add(last.copy(sweepAngle = 360f - list.sumOf { it.sweepAngle.toDouble() }.toFloat()))
+            }
+            list
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -380,7 +581,7 @@ private fun ScreenTimeCard(
             .background(Color(0xFF121214))
             .border(1.dp, Color(0xFF27272A), RoundedCornerShape(18.dp))
             .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Header Row
         Row(
@@ -456,26 +657,35 @@ private fun ScreenTimeCard(
             }
         }
 
-        // Metric Row
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = "${hours}h ${minutes}m",
-                color = TextPrimary,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.SansSerif
+        // 2. Centered Donut Chart Section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            InteractiveDonutChart(
+                segments = segments,
+                centerTimeText = "${hours}h ${minutes}m",
+                centerSubtitleText = "Hoy en pantalla"
             )
-            Text(
-                text = if (isPermissionGranted) {
-                    "Meta diaria: < 3h 00m (En rango saludable)"
-                } else {
-                    "Simulado • Requiere acceso a datos de uso para tiempo real"
-                },
-                color = TextSecondary,
-                fontSize = 11.sp,
-                fontFamily = FontFamily.SansSerif
-            )
+
+            DonutLegendRow(segments = segments)
         }
+
+        // Subtitle / Target
+        Text(
+            text = if (isPermissionGranted) {
+                "Meta diaria: < 3h 00m (En rango saludable)"
+            } else {
+                "Simulado • Requiere acceso a datos de uso para tiempo real"
+            },
+            color = TextSecondary,
+            fontSize = 11.sp,
+            fontFamily = FontFamily.SansSerif,
+            modifier = Modifier.padding(horizontal = 2.dp)
+        )
 
         // 3. Permission Activation Banner (Shown only when permission is NOT granted)
         if (!isPermissionGranted) {
