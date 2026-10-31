@@ -108,10 +108,10 @@ fun BubbleVaultHeader(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             val chips = listOf(
-                VaultCategory.ALL to "Todas (48)",
-                VaultCategory.OFFLINE_GOAL to "Metas Offline (12)",
-                VaultCategory.MCP_HABIT to "Hábitos MCP (18)",
-                VaultCategory.PREFERENCE to "Preferencias (18)"
+                VaultCategory.ALL to VaultCategory.ALL.displayName,
+                VaultCategory.OFFLINE_GOAL to VaultCategory.OFFLINE_GOAL.displayName,
+                VaultCategory.MCP_HABIT to VaultCategory.MCP_HABIT.displayName,
+                VaultCategory.PREFERENCE to VaultCategory.PREFERENCE.displayName
             )
 
             items(chips) { (cat, label) ->

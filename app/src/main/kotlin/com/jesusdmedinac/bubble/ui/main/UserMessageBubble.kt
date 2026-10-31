@@ -1,5 +1,8 @@
 package com.jesusdmedinac.bubble.ui.main
 
+import com.jesusdmedinac.bubble.data.model.ChatMessage
+import com.jesusdmedinac.bubble.data.model.MessageSender
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth

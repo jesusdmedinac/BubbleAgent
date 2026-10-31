@@ -1,22 +1,35 @@
 package com.jesusdmedinac.bubble.data.repository
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
+import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.data.model.OfflineProfile
 import com.jesusdmedinac.bubble.data.model.RecommendedActivity
 import com.jesusdmedinac.bubble.data.model.StoreAppItem
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.tracker.ScreenTimeTracker
+import com.jesusdmedinac.bubble.db.BubbleDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 interface BubbleRepository {
     val offlineProfile: StateFlow<OfflineProfile>
     val recommendedActivities: StateFlow<List<RecommendedActivity>>
     val digitalHealthSnapshot: StateFlow<DigitalHealthSnapshot>
     val vaultMemories: StateFlow<List<VaultMemoryItem>>
+    val chatMessages: StateFlow<List<ChatMessage>>
     val storeApps: StateFlow<List<StoreAppItem>>
 
     fun searchStoreApps(query: String, category: String? = null): List<StoreAppItem>
@@ -35,33 +48,21 @@ interface BubbleRepository {
     fun refreshSnapshot()
     fun addVaultMemory(item: VaultMemoryItem)
     fun deleteVaultMemory(id: String)
+
+    // Local Chat Persistence
+    fun insertChatMessage(message: ChatMessage)
+    fun updateChatMessageText(id: String, text: String)
+    fun clearChatMessages()
 }
 
 class BubbleRepositoryImpl(
-    private val screenTimeTracker: ScreenTimeTracker
+    private val screenTimeTracker: ScreenTimeTracker,
+    private val database: BubbleDatabase? = null,
+    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : BubbleRepository {
 
-    private val _offlineProfile = MutableStateFlow(OfflineProfile())
+    private val _offlineProfile = MutableStateFlow(loadInitialProfile())
     override val offlineProfile: StateFlow<OfflineProfile> = _offlineProfile.asStateFlow()
-
-    private val _recommendedActivities = MutableStateFlow<List<RecommendedActivity>>(
-        listOf(
-            RecommendedActivity(
-                title = "Aprender acordes básicos de guitarra acústica",
-                category = "MUSIC",
-                estimatedMinutes = 25,
-                reason = "Reemplaza los 50 minutos dedicados a redes sociales por una práctica musical activa."
-            ),
-            RecommendedActivity(
-                title = "Caminata de desconexión sin teléfono",
-                category = "NATURE",
-                estimatedMinutes = 30,
-                reason = "Reduce fatiga cognitiva y resetea los picos de dopamina tras uso continuo de pantalla."
-            )
-        )
-    )
-    override val recommendedActivities: StateFlow<List<RecommendedActivity>> =
-        _recommendedActivities.asStateFlow()
 
     private val _digitalHealthSnapshot = MutableStateFlow(
         screenTimeTracker.getTodaySnapshot(_offlineProfile.value.interests)
@@ -69,67 +70,160 @@ class BubbleRepositoryImpl(
     override val digitalHealthSnapshot: StateFlow<DigitalHealthSnapshot> =
         _digitalHealthSnapshot.asStateFlow()
 
-    private val _vaultMemories = MutableStateFlow<List<VaultMemoryItem>>(
-        listOf(
-            VaultMemoryItem(
-                tag = "META OFFLINE",
-                category = VaultCategory.OFFLINE_GOAL,
-                title = "Sustituir doomscrolling nocturno en Instagram por 25 min de práctica de guitarra acústica (fingerpicking).",
-                source = "Hace 2h • Gemini Nano",
-                timestampFormatted = "Hace 2h",
-                footerDetail = "Origen: Chat local • SQLite Encriptada on-device",
-                tagColorHex = 0xFF1BB5C6
-            ),
-            VaultMemoryItem(
-                tag = "HÁBITO DETECTADO",
-                category = VaultCategory.MCP_HABIT,
-                title = "Pico de 14 desbloqueos compulsivos de Instagram entre 2:00 PM y 3:30 PM sin intención clara.",
-                source = "Hoy 3:15 PM • Android MCP",
-                timestampFormatted = "Hoy 3:15 PM",
-                footerDetail = "Sensor MCP: AppUsageTracker • Sugerir respiración 4-7-8",
-                tagColorHex = 0xFFF5A623
-            ),
-            VaultMemoryItem(
-                tag = "PREFERENCIA",
-                category = VaultCategory.PREFERENCE,
-                title = "Activar automáticamente No Molestar y silenciar apps de ocio durante sesiones de lectura (8:00 - 9:00 PM).",
-                source = "Ayer • Context Center",
-                timestampFormatted = "Ayer",
-                footerDetail = "Regla activa on-device • Expuesta a Gemini Nano",
-                tagColorHex = 0xFF5C8DEF
-            ),
-            VaultMemoryItem(
-                tag = "INTERÉS DETECTADO",
-                category = VaultCategory.OFFLINE_GOAL,
-                title = "Enfocado en aprender fingerpicking y la regla de los 2 minutos de Atomic Habits.",
-                source = "30 Oct • Bubble Agent",
-                timestampFormatted = "30 Oct",
-                footerDetail = "Memoria contextual para priorizar actividades offline",
-                tagColorHex = 0xFF10B981
-            )
-        )
-    )
-    override val vaultMemories: StateFlow<List<VaultMemoryItem>> = _vaultMemories.asStateFlow()
-
-    override fun addVaultMemory(item: VaultMemoryItem) {
-        _vaultMemories.update { current -> listOf(item) + current }
+    // SQLDelight Reactive Vault Memories (No seed data, empty by default)
+    private val _inMemoryVault = MutableStateFlow<List<VaultMemoryItem>>(emptyList())
+    override val vaultMemories: StateFlow<List<VaultMemoryItem>> = if (database != null) {
+        database.bubbleDatabaseQueries
+            .selectAllVaultMemories()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { entities ->
+                entities.map { entity ->
+                    val cat = try {
+                        VaultCategory.valueOf(entity.category)
+                    } catch (_: Exception) {
+                        VaultCategory.PREFERENCE
+                    }
+                    VaultMemoryItem(
+                        id = entity.id,
+                        tag = entity.tag,
+                        category = cat,
+                        title = entity.title,
+                        source = entity.source,
+                        timestampFormatted = entity.timestampFormatted,
+                        footerDetail = entity.footerDetail,
+                        tagColorHex = entity.tagColorHex
+                    )
+                }
+            }
+            .stateIn(coroutineScope, SharingStarted.Eagerly, emptyList())
+    } else {
+        _inMemoryVault.asStateFlow()
     }
 
-    override fun deleteVaultMemory(id: String) {
-        _vaultMemories.update { current -> current.filter { it.id != id } }
+    // SQLDelight Reactive Activities (No seed data, empty by default)
+    private val _inMemoryActivities = MutableStateFlow<List<RecommendedActivity>>(emptyList())
+    override val recommendedActivities: StateFlow<List<RecommendedActivity>> = if (database != null) {
+        database.bubbleDatabaseQueries
+            .selectAllActivities()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { entities ->
+                entities.map { entity ->
+                    RecommendedActivity(
+                        id = entity.id,
+                        title = entity.title,
+                        category = entity.category,
+                        estimatedMinutes = entity.estimatedMinutes.toInt(),
+                        reason = entity.reason,
+                        isCompleted = entity.isCompleted != 0L
+                    )
+                }
+            }
+            .stateIn(coroutineScope, SharingStarted.Eagerly, emptyList())
+    } else {
+        _inMemoryActivities.asStateFlow()
+    }
+
+    // SQLDelight Reactive Chat Messages (No seed data, empty by default)
+    private val _inMemoryChat = MutableStateFlow<List<ChatMessage>>(emptyList())
+    override val chatMessages: StateFlow<List<ChatMessage>> = if (database != null) {
+        database.bubbleDatabaseQueries
+            .selectAllMessages()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { entities ->
+                entities.map { entity ->
+                    val sender = try {
+                        MessageSender.valueOf(entity.sender)
+                    } catch (_: Exception) {
+                        MessageSender.BUBBLE
+                    }
+                    ChatMessage(
+                        id = entity.id,
+                        sender = sender,
+                        text = entity.text,
+                        timestamp = entity.timestamp
+                    )
+                }
+            }
+            .stateIn(coroutineScope, SharingStarted.Eagerly, emptyList())
+    } else {
+        _inMemoryChat.asStateFlow()
+    }
+
+    private fun loadInitialProfile(): OfflineProfile {
+        if (database == null) return OfflineProfile()
+        return try {
+            val entity = database.bubbleDatabaseQueries.getProfile().executeAsOneOrNull()
+            if (entity != null) {
+                val interests = entity.interestsJson.split("|||").filter { it.isNotBlank() }
+                val goals = entity.goalsJson.split("|||").filter { it.isNotBlank() }
+                OfflineProfile(
+                    interests = interests,
+                    idealDurationMinutes = entity.idealDurationMinutes.toInt(),
+                    energyLevel = entity.energyLevel,
+                    goals = goals
+                )
+            } else {
+                OfflineProfile()
+            }
+        } catch (_: Exception) {
+            OfflineProfile()
+        }
     }
 
     override fun updateProfile(profile: OfflineProfile) {
         _offlineProfile.value = profile
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.upsertProfile(
+                    interestsJson = profile.interests.joinToString("|||"),
+                    goalsJson = profile.goals.joinToString("|||"),
+                    idealDurationMinutes = profile.idealDurationMinutes.toLong(),
+                    energyLevel = profile.energyLevel
+                )
+            }
+        }
         refreshSnapshot()
     }
 
     override fun addInterest(interest: String) {
-        _offlineProfile.update { current ->
-            if (current.interests.contains(interest)) current
-            else current.copy(interests = current.interests + interest)
+        val current = _offlineProfile.value
+        if (!current.interests.contains(interest)) {
+            val updated = current.copy(interests = current.interests + interest)
+            updateProfile(updated)
         }
-        refreshSnapshot()
+    }
+
+    override fun addVaultMemory(item: VaultMemoryItem) {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.insertVaultMemory(
+                    id = item.id,
+                    tag = item.tag,
+                    category = item.category.name,
+                    title = item.title,
+                    source = item.source,
+                    timestampFormatted = item.timestampFormatted,
+                    footerDetail = item.footerDetail,
+                    tagColorHex = item.tagColorHex,
+                    createdAt = System.currentTimeMillis()
+                )
+            }
+        } else {
+            _inMemoryVault.update { current -> listOf(item) + current }
+        }
+    }
+
+    override fun deleteVaultMemory(id: String) {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.deleteVaultMemory(id)
+            }
+        } else {
+            _inMemoryVault.update { current -> current.filter { it.id != id } }
+        }
     }
 
     override fun saveRecommendedActivity(
@@ -144,17 +238,72 @@ class BubbleRepositoryImpl(
             estimatedMinutes = estimatedMinutes,
             reason = reason
         )
-        _recommendedActivities.update { current ->
-            listOf(newActivity) + current
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.insertActivity(
+                    id = newActivity.id,
+                    title = newActivity.title,
+                    category = newActivity.category,
+                    estimatedMinutes = newActivity.estimatedMinutes.toLong(),
+                    reason = newActivity.reason,
+                    isCompleted = if (newActivity.isCompleted) 1L else 0L,
+                    createdAt = System.currentTimeMillis()
+                )
+            }
+        } else {
+            _inMemoryActivities.update { current -> listOf(newActivity) + current }
         }
         return newActivity
     }
 
     override fun toggleActivityCompleted(id: String) {
-        _recommendedActivities.update { current ->
-            current.map {
-                if (it.id == id) it.copy(isCompleted = !it.isCompleted) else it
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.toggleActivityCompleted(id)
             }
+        } else {
+            _inMemoryActivities.update { current ->
+                current.map {
+                    if (it.id == id) it.copy(isCompleted = !it.isCompleted) else it
+                }
+            }
+        }
+    }
+
+    override fun insertChatMessage(message: ChatMessage) {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.insertMessage(
+                    id = message.id,
+                    sender = message.sender.name,
+                    text = message.text,
+                    timestamp = message.timestamp
+                )
+            }
+        } else {
+            _inMemoryChat.update { it + message }
+        }
+    }
+
+    override fun updateChatMessageText(id: String, text: String) {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.updateMessageText(text = text, id = id)
+            }
+        } else {
+            _inMemoryChat.update { list ->
+                list.map { if (it.id == id) it.copy(text = text) else it }
+            }
+        }
+    }
+
+    override fun clearChatMessages() {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.clearAllMessages()
+            }
+        } else {
+            _inMemoryChat.value = emptyList()
         }
     }
 

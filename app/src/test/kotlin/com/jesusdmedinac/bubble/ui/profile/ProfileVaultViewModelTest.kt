@@ -107,6 +107,19 @@ class FakeProfileBubbleRepository : BubbleRepository {
     override fun searchStoreApps(query: String, category: String?): List<StoreAppItem> = emptyList()
     override fun getStoreAppDetails(packageName: String): StoreAppItem? = null
     override fun listMindfulApps(): List<StoreAppItem> = emptyList()
+
+    private val _chatMessages = MutableStateFlow<List<com.jesusdmedinac.bubble.data.model.ChatMessage>>(emptyList())
+    override val chatMessages: StateFlow<List<com.jesusdmedinac.bubble.data.model.ChatMessage>> = _chatMessages.asStateFlow()
+
+    override fun insertChatMessage(message: com.jesusdmedinac.bubble.data.model.ChatMessage) {
+        _chatMessages.update { it + message }
+    }
+    override fun updateChatMessageText(id: String, text: String) {
+        _chatMessages.update { list -> list.map { if (it.id == id) it.copy(text = text) else it } }
+    }
+    override fun clearChatMessages() {
+        _chatMessages.value = emptyList()
+    }
 }
 
 class ProfileVaultViewModelTest {

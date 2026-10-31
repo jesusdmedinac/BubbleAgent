@@ -1,0 +1,99 @@
+CREATE TABLE ChatMessageEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    sender TEXT NOT NULL,
+    text TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+selectAllMessages:
+SELECT *
+FROM ChatMessageEntity
+ORDER BY timestamp ASC;
+
+insertMessage:
+INSERT OR REPLACE INTO ChatMessageEntity(id, sender, text, timestamp)
+VALUES (?, ?, ?, ?);
+
+updateMessageText:
+UPDATE ChatMessageEntity
+SET text = ?
+WHERE id = ?;
+
+deleteMessage:
+DELETE FROM ChatMessageEntity
+WHERE id = ?;
+
+clearAllMessages:
+DELETE FROM ChatMessageEntity;
+
+CREATE TABLE VaultMemoryEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    tag TEXT NOT NULL,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    source TEXT NOT NULL,
+    timestampFormatted TEXT NOT NULL,
+    footerDetail TEXT NOT NULL,
+    tagColorHex INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL
+);
+
+selectAllVaultMemories:
+SELECT *
+FROM VaultMemoryEntity
+ORDER BY createdAt DESC;
+
+insertVaultMemory:
+INSERT OR REPLACE INTO VaultMemoryEntity(id, tag, category, title, source, timestampFormatted, footerDetail, tagColorHex, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteVaultMemory:
+DELETE FROM VaultMemoryEntity
+WHERE id = ?;
+
+clearAllVaultMemories:
+DELETE FROM VaultMemoryEntity;
+
+CREATE TABLE OfflineProfileEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    interestsJson TEXT NOT NULL,
+    goalsJson TEXT NOT NULL,
+    idealDurationMinutes INTEGER NOT NULL,
+    energyLevel TEXT NOT NULL
+);
+
+getProfile:
+SELECT *
+FROM OfflineProfileEntity
+WHERE id = 1;
+
+upsertProfile:
+INSERT OR REPLACE INTO OfflineProfileEntity(id, interestsJson, goalsJson, idealDurationMinutes, energyLevel)
+VALUES (1, ?, ?, ?, ?);
+
+CREATE TABLE RecommendedActivityEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    estimatedMinutes INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    isCompleted INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL
+);
+
+selectAllActivities:
+SELECT *
+FROM RecommendedActivityEntity
+ORDER BY createdAt DESC;
+
+insertActivity:
+INSERT OR REPLACE INTO RecommendedActivityEntity(id, title, category, estimatedMinutes, reason, isCompleted, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+toggleActivityCompleted:
+UPDATE RecommendedActivityEntity
+SET isCompleted = CASE WHEN isCompleted = 1 THEN 0 ELSE 1 END
+WHERE id = ?;
+
+clearAllActivities:
+DELETE FROM RecommendedActivityEntity;

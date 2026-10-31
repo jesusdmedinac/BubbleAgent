@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.jesusdmedinac.bubble.BubbleApplication
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
 import com.jesusdmedinac.bubble.ai.MockAiEngine
+import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
+import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.data.model.OfflineProfile
 import com.jesusdmedinac.bubble.data.model.RecommendedActivity
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
@@ -15,21 +17,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-
-enum class MessageSender {
-    USER, BUBBLE
-}
-
-data class ChatMessage(
-    val id: String = UUID.randomUUID().toString(),
-    val sender: MessageSender,
-    val text: String,
-    val timestamp: Long = System.currentTimeMillis()
-)
 
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
@@ -45,8 +37,25 @@ class MainScreenViewModel(
     private val repository: BubbleRepository = BubbleApplication.instance.appContainer.bubbleRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ChatUiState())
-    val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+    private val _inputText = MutableStateFlow("")
+    private val _isGenerating = MutableStateFlow(false)
+    private val _showDashboardHeader = MutableStateFlow(true)
+
+    val uiState: StateFlow<ChatUiState> = combine(
+        repository.chatMessages,
+        _inputText,
+        _isGenerating,
+        _showDashboardHeader
+    ) { messages, inputText, isGenerating, showDashboardHeader ->
+        ChatUiState(
+            messages = messages,
+            inputText = inputText,
+            isGenerating = isGenerating,
+            selectedTab = 2,
+            userName = "Jesús Daniel",
+            showDashboardHeader = showDashboardHeader
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
 
     val digitalHealthSnapshot: StateFlow<DigitalHealthSnapshot> =
         repository.digitalHealthSnapshot
@@ -58,15 +67,16 @@ class MainScreenViewModel(
         repository.offlineProfile
 
     fun onInputTextChanged(text: String) {
-        _uiState.update { it.copy(inputText = text) }
+        _inputText.value = text
     }
 
     fun onNewChatClicked() {
-        _uiState.update { it.copy(messages = emptyList(), inputText = "") }
+        repository.clearChatMessages()
+        _inputText.value = ""
     }
 
     fun toggleDashboardHeader() {
-        _uiState.update { it.copy(showDashboardHeader = !it.showDashboardHeader) }
+        _showDashboardHeader.update { !it }
     }
 
     fun onToggleActivityCompleted(id: String) {
@@ -81,7 +91,7 @@ class MainScreenViewModel(
         try {
             val intent = BubbleApplication.instance.appContainer.screenTimeTracker.createSettingsIntent()
             context.startActivity(intent)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Handled gracefully
         }
     }
@@ -114,13 +124,14 @@ class MainScreenViewModel(
     }
 
     fun onSendMessage() {
-        val query = _uiState.value.inputText.trim()
-        if (query.isEmpty() || _uiState.value.isGenerating) return
+        val query = _inputText.value.trim()
+        if (query.isEmpty() || _isGenerating.value) return
 
         val userMessage = ChatMessage(
             sender = MessageSender.USER,
             text = query
         )
+        repository.insertChatMessage(userMessage)
 
         val assistantMsgId = UUID.randomUUID().toString()
         val initialAssistantMessage = ChatMessage(
@@ -128,14 +139,10 @@ class MainScreenViewModel(
             sender = MessageSender.BUBBLE,
             text = ""
         )
+        repository.insertChatMessage(initialAssistantMessage)
 
-        _uiState.update { state ->
-            state.copy(
-                messages = state.messages + userMessage + initialAssistantMessage,
-                inputText = "",
-                isGenerating = true
-            )
-        }
+        _inputText.value = ""
+        _isGenerating.value = true
 
         viewModelScope.launch {
             var accumulated = ""
@@ -143,25 +150,15 @@ class MainScreenViewModel(
                 .catch {
                     if (accumulated.isEmpty()) {
                         accumulated = "¡Hola Jesús! Estoy aquí en tu dispositivo de forma 100% privada y local vía Gemini Nano. ¿Qué actividad del mundo real te gustaría priorizar hoy?"
-                        updateAssistantMessage(assistantMsgId, accumulated)
+                        repository.updateChatMessageText(assistantMsgId, accumulated)
                     }
                 }
                 .collect { token ->
                     accumulated += token
-                    updateAssistantMessage(assistantMsgId, accumulated)
+                    repository.updateChatMessageText(assistantMsgId, accumulated)
                 }
 
-            _uiState.update { it.copy(isGenerating = false) }
-        }
-    }
-
-    private fun updateAssistantMessage(id: String, text: String) {
-        _uiState.update { state ->
-            state.copy(
-                messages = state.messages.map { msg ->
-                    if (msg.id == id) msg.copy(text = text) else msg
-                }
-            )
+            _isGenerating.value = false
         }
     }
 

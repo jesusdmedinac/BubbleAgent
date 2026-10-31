@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.sqldelight)
 }
 
 android {
@@ -42,6 +43,14 @@ android {
 
 kotlin {
   jvmToolchain(17)
+}
+
+sqldelight {
+  databases {
+    create("BubbleDatabase") {
+      packageName.set("com.jesusdmedinac.bubble.db")
+    }
+  }
 }
 
 dependencies {
@@ -91,4 +100,8 @@ dependencies {
   // AppFunctions (Android MCP Server)
   implementation(libs.androidx.appfunctions)
   ksp(libs.androidx.appfunctions.compiler)
+
+  // SQLDelight Persistence
+  implementation(libs.sqldelight.android.driver)
+  implementation(libs.sqldelight.coroutines.extensions)
 }

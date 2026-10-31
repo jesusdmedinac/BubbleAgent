@@ -1,7 +1,9 @@
 package com.jesusdmedinac.bubble.ui.main
 
 import com.jesusdmedinac.bubble.ai.MockAiEngine
+import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
+import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.data.model.OfflineProfile
 import com.jesusdmedinac.bubble.data.model.RecommendedActivity
 import com.jesusdmedinac.bubble.data.model.StoreAppItem
@@ -84,6 +86,19 @@ class FakeBubbleRepository : BubbleRepository {
     override fun searchStoreApps(query: String, category: String?): List<StoreAppItem> = emptyList()
     override fun getStoreAppDetails(packageName: String): StoreAppItem? = null
     override fun listMindfulApps(): List<StoreAppItem> = emptyList()
+
+    private val _chatMessages = MutableStateFlow<List<ChatMessage>>(emptyList())
+    override val chatMessages: StateFlow<List<ChatMessage>> = _chatMessages.asStateFlow()
+
+    override fun insertChatMessage(message: ChatMessage) {
+        _chatMessages.update { it + message }
+    }
+    override fun updateChatMessageText(id: String, text: String) {
+        _chatMessages.update { list -> list.map { if (it.id == id) it.copy(text = text) else it } }
+    }
+    override fun clearChatMessages() {
+        _chatMessages.value = emptyList()
+    }
 }
 
 class MainScreenViewModelTest {
@@ -107,7 +122,8 @@ class MainScreenViewModelTest {
     fun uiState_onInputTextChanged() = runTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Hola Bubble")
-        assertEquals("Hola Bubble", viewModel.uiState.first().inputText)
+        val state = viewModel.uiState.first { it.inputText == "Hola Bubble" }
+        assertEquals("Hola Bubble", state.inputText)
     }
 
     @Test
@@ -116,7 +132,7 @@ class MainScreenViewModelTest {
         viewModel.onInputTextChanged("Tocar guitarra")
         viewModel.onSendMessage()
 
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.first { it.messages.size >= 2 }
         assertEquals("", state.inputText)
         assertEquals(2, state.messages.size)
         assertEquals(MessageSender.USER, state.messages[0].sender)
@@ -129,9 +145,11 @@ class MainScreenViewModelTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Mensaje 1")
         viewModel.onSendMessage()
+        viewModel.uiState.first { it.messages.size >= 2 }
+
         viewModel.onNewChatClicked()
 
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.first { it.messages.isEmpty() && it.inputText.isEmpty() }
         assertTrue(state.messages.isEmpty())
         assertEquals("", state.inputText)
     }

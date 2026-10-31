@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -14,13 +15,21 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Text
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
+import com.jesusdmedinac.bubble.ui.theme.SurfaceContainerLow
+import com.jesusdmedinac.bubble.ui.theme.TextSecondary
 
 @Composable
 fun ProfileVaultContent(
@@ -81,8 +90,28 @@ fun ProfileVaultContent(
             }
 
             // 5. Memory Cards List
-            items(uiState.displayedMemories, key = { it.id }) { memory ->
-                VaultMemoryCard(memory = memory)
+            if (uiState.displayedMemories.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(SurfaceContainerLow)
+                            .padding(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Tu Vault está vacío. Bubble y Gemini irán guardando hábitos y metas descubiertas durante tus conversaciones.",
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                items(uiState.displayedMemories, key = { it.id }) { memory ->
+                    VaultMemoryCard(memory = memory)
+                }
             }
 
             item {

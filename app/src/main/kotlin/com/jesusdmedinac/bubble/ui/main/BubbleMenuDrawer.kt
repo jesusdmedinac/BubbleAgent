@@ -145,31 +145,21 @@ fun BubbleMenuDrawer(
                 DrawerNavigationLink(
                     icon = Icons.Rounded.TrackChanges,
                     title = "Focus mode",
-                    iconTint = TextPrimary,
-                    titleColor = TextPrimary,
+                    iconTint = TextSecondary,
+                    titleColor = TextSecondary,
+                    badge = {
+                        ComingSoonBadge()
+                    },
                     onClick = onFocusModeClick
                 )
 
                 DrawerNavigationLink(
                     icon = Icons.Rounded.GridView,
                     title = "Apps",
-                    iconTint = TextPrimary,
-                    titleColor = TextPrimary,
+                    iconTint = TextSecondary,
+                    titleColor = TextSecondary,
                     badge = {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Gold20)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "PRO",
-                                color = AccentGold,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.SansSerif
-                            )
-                        }
+                        ComingSoonBadge()
                     },
                     onClick = onAppsClick
                 )
