@@ -24,30 +24,37 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.TrendingDown
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.material.icons.automirrored.rounded.TrendingDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bubble.agent.data.model.AppUsageStat
@@ -71,6 +78,20 @@ fun ProfileVaultScreen(
     viewModel: ProfileVaultViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshPermissionAndStats()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     BackHandler(onBack = onClose)
 
@@ -78,6 +99,7 @@ fun ProfileVaultScreen(
         uiState = uiState,
         onClose = onClose,
         onCategorySelected = viewModel::onCategorySelected,
+        onOpenSettingsClick = { viewModel.openUsageSettings(context) },
         modifier = modifier
     )
 }
@@ -87,6 +109,7 @@ fun ProfileVaultContent(
     uiState: ProfileVaultUiState,
     onClose: () -> Unit,
     onCategorySelected: (VaultCategory) -> Unit,
+    onOpenSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -125,7 +148,9 @@ fun ProfileVaultContent(
                     minutes = uiState.screenTimeMinutes,
                     trend = uiState.screenTimeTrend,
                     topApps = uiState.topApps,
-                    offlineGainText = uiState.offlineGainText
+                    offlineGainText = uiState.offlineGainText,
+                    isPermissionGranted = uiState.isUsagePermissionGranted,
+                    onOpenSettingsClick = onOpenSettingsClick
                 )
             }
 
@@ -344,7 +369,9 @@ private fun ScreenTimeCard(
     minutes: Long,
     trend: String,
     topApps: List<AppUsageStat>,
-    offlineGainText: String
+    offlineGainText: String,
+    isPermissionGranted: Boolean,
+    onOpenSettingsClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -380,27 +407,52 @@ private fun ScreenTimeCard(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0x2210B981))
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.TrendingDown,
-                    contentDescription = null,
-                    tint = StatusSuccess,
-                    modifier = Modifier.size(11.dp)
-                )
-                Text(
-                    text = trend,
-                    color = StatusSuccess,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.SansSerif
-                )
+            if (isPermissionGranted) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0x2210B981))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = StatusSuccess,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Text(
+                        text = "Sincronizado en Vivo",
+                        color = StatusSuccess,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0x22F5A623))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Shield,
+                        contentDescription = null,
+                        tint = AccentGold,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Text(
+                        text = "Modo Demostración",
+                        color = AccentGold,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
             }
         }
 
@@ -414,72 +466,189 @@ private fun ScreenTimeCard(
                 fontFamily = FontFamily.SansSerif
             )
             Text(
-                text = "Meta diaria: < 3h 00m (En rango saludable)",
+                text = if (isPermissionGranted) {
+                    "Meta diaria: < 3h 00m (En rango saludable)"
+                } else {
+                    "Simulado • Requiere acceso a datos de uso para tiempo real"
+                },
                 color = TextSecondary,
                 fontSize = 11.sp,
                 fontFamily = FontFamily.SansSerif
             )
         }
 
-        // Apps Usage Breakdown
-        val defaultApps = if (topApps.isNotEmpty()) topApps else listOf(
-            AppUsageStat("Instagram", "com.instagram.android", 42L),
-            AppUsageStat("YouTube", "com.google.android.youtube", 28L),
-            AppUsageStat("X (Twitter)", "com.twitter.android", 18L)
-        )
-
-        val appColors = listOf(Color(0xFFFF6B4A), Color(0xFFF5A623), Color(0xFF5C8DEF))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            defaultApps.take(3).forEachIndexed { idx, app ->
-                val barColor = appColors.getOrElse(idx) { BubbleCyan }
-                val progressFraction = (app.usageMinutes / 60f).coerceIn(0.15f, 0.95f)
-
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+        // 3. Permission Activation Banner (Shown only when permission is NOT granted)
+        if (!isPermissionGranted) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF1E1710))
+                    .border(1.dp, Color(0x66F5A623), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x33F5A623)),
+                        contentAlignment = Alignment.Center
                     ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Security,
+                            contentDescription = null,
+                            tint = AccentGold,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                    Column {
                         Text(
-                            text = app.appName,
+                            text = "Lectura de tiempo en pantalla inactiva",
                             color = TextPrimary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.SansSerif
                         )
                         Text(
-                            text = "${app.usageMinutes}m",
-                            color = TextSecondary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Monospace
+                            text = "Concede acceso a Bubble en Ajustes",
+                            color = AccentGold,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = FontFamily.SansSerif
                         )
                     }
+                }
 
-                    // Progress Track
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(Color(0xFF1B1B1F))
+                Text(
+                    text = "Permite a Bubble y a Gemini Nano medir tus horas reales y detectar picos de distracción en apps para sugerir desconexiones offline oportunas.",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp,
+                    fontFamily = FontFamily.SansSerif
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AccentGold)
+                        .clickable { onOpenSettingsClick() }
+                        .padding(vertical = 9.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Settings,
+                        contentDescription = null,
+                        tint = Color(0xFF090A0D),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(
+                        text = "Activar en Ajustes de Android",
+                        color = Color(0xFF090A0D),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Lock,
+                        contentDescription = null,
+                        tint = TextMuted,
+                        modifier = Modifier.size(10.dp)
+                    )
+                    Text(
+                        text = "100% privado en tu Snapdragon NPU. Cero telemetría externa.",
+                        color = TextMuted,
+                        fontSize = 9.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            }
+        }
+
+        // Apps Usage Breakdown Section
+        Text(
+            text = if (isPermissionGranted) "Apps más usadas hoy" else "Apps de demostración",
+            color = TextSecondary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.SansSerif
+        )
+
+        if (isPermissionGranted && topApps.isEmpty()) {
+            Text(
+                text = "Sin uso de apps registrado aún hoy.",
+                color = TextMuted,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.SansSerif,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+        } else {
+            val appColors = listOf(Color(0xFFFF6B4A), Color(0xFFF5A623), Color(0xFF5C8DEF), BubbleCyan)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                topApps.take(4).forEachIndexed { idx, app ->
+                    val barColor = appColors.getOrElse(idx) { BubbleCyan }
+                    val progressFraction = (app.usageMinutes / 60f).coerceIn(0.12f, 0.95f)
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = app.appName,
+                                color = TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = FontFamily.SansSerif
+                            )
+                            Text(
+                                text = "${app.usageMinutes}m",
+                                color = TextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+
+                        // Progress Track
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(progressFraction)
+                                .fillMaxWidth()
                                 .height(5.dp)
                                 .clip(RoundedCornerShape(3.dp))
-                                .background(barColor)
-                        )
+                                .background(Color(0xFF1B1B1F))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progressFraction)
+                                    .height(5.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(barColor)
+                            )
+                        }
                     }
                 }
             }
@@ -786,7 +955,8 @@ fun ProfileVaultScreenPreview() {
                 )
             ),
             onClose = {},
-            onCategorySelected = {}
+            onCategorySelected = {},
+            onOpenSettingsClick = {}
         )
     }
 }

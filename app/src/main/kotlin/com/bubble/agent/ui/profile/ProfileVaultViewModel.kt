@@ -1,5 +1,6 @@
 package com.bubble.agent.ui.profile
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bubble.agent.BubbleApplication
@@ -25,7 +26,8 @@ data class ProfileVaultUiState(
     val screenTimeTrend: String = "-38% vs ayer",
     val offlineGainText: String = "+1h 45m de vida offline ganada (Guitarra & Lectura)",
     val topApps: List<AppUsageStat> = emptyList(),
-    val displayedMemories: List<VaultMemoryItem> = emptyList()
+    val displayedMemories: List<VaultMemoryItem> = emptyList(),
+    val isUsagePermissionGranted: Boolean = false
 )
 
 class ProfileVaultViewModel(
@@ -46,31 +48,53 @@ class ProfileVaultViewModel(
 
         // Format screen time from real usage if available
         val totalMinutes = snapshot.totalScreenTimeMinutes
-        val hours = if (totalMinutes > 0) totalMinutes / 60 else 2L
-        val mins = if (totalMinutes > 0) totalMinutes % 60 else 14L
+        val hours = totalMinutes / 60
+        val mins = totalMinutes % 60
 
         val apps = if (snapshot.topApps.isNotEmpty()) {
             snapshot.topApps
-        } else {
+        } else if (!snapshot.isPermissionGranted) {
             listOf(
-                AppUsageStat("Instagram", "com.instagram.android", 42L),
-                AppUsageStat("YouTube", "com.google.android.youtube", 28L),
-                AppUsageStat("X (Twitter)", "com.twitter.android", 18L)
+                AppUsageStat("Instagram", "com.instagram.android", 105L),
+                AppUsageStat("TikTok", "com.zhiliaoapp.musically", 70L),
+                AppUsageStat("X / Twitter", "com.twitter.android", 50L),
+                AppUsageStat("YouTube", "com.google.android.youtube", 30L)
             )
+        } else {
+            emptyList()
+        }
+
+        val offlineGain = if (snapshot.potentialRecoverableMinutes > 0) {
+            val recHours = snapshot.potentialRecoverableMinutes / 60
+            val recMins = snapshot.potentialRecoverableMinutes % 60
+            if (recHours > 0) {
+                "+${recHours}h ${recMins}m de vida offline ganada (Guitarra & Lectura)"
+            } else {
+                "+${recMins}m de vida offline ganada (Guitarra & Lectura)"
+            }
+        } else {
+            "+1h 45m de vida offline ganada (Guitarra & Lectura)"
+        }
+
+        val trend = if (snapshot.isPermissionGranted) {
+            "Sincronizado"
+        } else {
+            "-38% vs ayer"
         }
 
         ProfileVaultUiState(
             userName = "Jesús Daniel Medina",
             userHandle = "@jesusdmedinac • Pro Account",
             focusStreakDays = 7,
-            totalMemoriesCount = 48,
+            totalMemoriesCount = memories.size.coerceAtLeast(48),
             selectedCategory = category,
             screenTimeHours = hours,
             screenTimeMinutes = mins,
-            screenTimeTrend = "-38% vs ayer",
-            offlineGainText = "+1h 45m de vida offline ganada (Guitarra & Lectura)",
+            screenTimeTrend = trend,
+            offlineGainText = offlineGain,
             topApps = apps,
-            displayedMemories = filtered
+            displayedMemories = filtered,
+            isUsagePermissionGranted = snapshot.isPermissionGranted
         )
     }.stateIn(
         scope = viewModelScope,
@@ -80,5 +104,18 @@ class ProfileVaultViewModel(
 
     fun onCategorySelected(category: VaultCategory) {
         _selectedCategory.value = category
+    }
+
+    fun refreshPermissionAndStats() {
+        repository.refreshSnapshot()
+    }
+
+    fun openUsageSettings(context: Context) {
+        try {
+            val intent = BubbleApplication.instance.appContainer.screenTimeTracker.createSettingsIntent()
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Handled gracefully
+        }
     }
 }

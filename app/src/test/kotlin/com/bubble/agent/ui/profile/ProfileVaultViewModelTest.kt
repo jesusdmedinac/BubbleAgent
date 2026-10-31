@@ -83,8 +83,16 @@ class FakeProfileBubbleRepository : BubbleRepository {
         return act
     }
 
+    var refreshSnapshotCallCount = 0
+
+    fun setSnapshot(snapshot: DigitalHealthSnapshot) {
+        _digitalHealthSnapshot.value = snapshot
+    }
+
     override fun toggleActivityCompleted(id: String) {}
-    override fun refreshSnapshot() {}
+    override fun refreshSnapshot() {
+        refreshSnapshotCallCount++
+    }
     override fun addVaultMemory(item: VaultMemoryItem) {
         _vaultMemories.update { listOf(item) + it }
     }
@@ -106,6 +114,7 @@ class ProfileVaultViewModelTest {
         assertEquals(2L, state.screenTimeHours)
         assertEquals(14L, state.screenTimeMinutes)
         assertEquals(3, state.displayedMemories.size)
+        assertTrue(state.isUsagePermissionGranted)
     }
 
     @Test
@@ -118,5 +127,36 @@ class ProfileVaultViewModelTest {
         val state = viewModel.uiState.first { it.selectedCategory == VaultCategory.OFFLINE_GOAL }
         assertEquals(1, state.displayedMemories.size)
         assertEquals("META OFFLINE", state.displayedMemories.first().tag)
+    }
+
+    @Test
+    fun permissionNotGranted_exposesFalseFlagAndDemoValues() = runTest {
+        val repository = FakeProfileBubbleRepository()
+        repository.setSnapshot(
+            DigitalHealthSnapshot(
+                totalScreenTimeMinutes = 255L,
+                potentialRecoverableMinutes = 120L,
+                topApps = emptyList(),
+                isPermissionGranted = false
+            )
+        )
+        val viewModel = ProfileVaultViewModel(repository)
+
+        val state = viewModel.uiState.first { it.displayedMemories.isNotEmpty() && !it.isUsagePermissionGranted }
+
+        assertEquals(false, state.isUsagePermissionGranted)
+        assertEquals(4L, state.screenTimeHours)
+        assertEquals(15L, state.screenTimeMinutes)
+        assertEquals("-38% vs ayer", state.screenTimeTrend)
+    }
+
+    @Test
+    fun refreshPermissionAndStats_triggersRepositoryRefresh() = runTest {
+        val repository = FakeProfileBubbleRepository()
+        val viewModel = ProfileVaultViewModel(repository)
+
+        viewModel.refreshPermissionAndStats()
+
+        assertEquals(1, repository.refreshSnapshotCallCount)
     }
 }
