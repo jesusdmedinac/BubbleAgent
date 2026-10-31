@@ -39,6 +39,7 @@ fun MainScreenContent(
     uiState: ChatUiState,
     listState: LazyListState,
     modifier: Modifier = Modifier,
+    onMenuClick: () -> Unit = {},
     onRefreshUsageStats: () -> Unit = {},
     onModelSelect: () -> Unit = {},
     onNewChat: () -> Unit = {},
@@ -63,7 +64,7 @@ fun MainScreenContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             BubbleTopAppBar(
-                onMenuClick = onRefreshUsageStats,
+                onMenuClick = onMenuClick,
                 onModelSelect = onModelSelect,
                 onNewChat = onNewChat,
                 onProfileClick = onProfileClick,
