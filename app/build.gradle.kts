@@ -104,4 +104,7 @@ dependencies {
   // SQLDelight Persistence
   implementation(libs.sqldelight.android.driver)
   implementation(libs.sqldelight.coroutines.extensions)
+
+  // Koog AI Agent Framework (JetBrains)
+  implementation(libs.koog.agents)
 }

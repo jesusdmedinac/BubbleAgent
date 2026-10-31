@@ -36,7 +36,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.jesusdmedinac.bubble.ai.GeminiNanoAiEngine
+import com.jesusdmedinac.bubble.ai.KoogGeminiNanoAiEngine
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
@@ -48,7 +48,7 @@ fun MainScreen(
     onProfileClick: () -> Unit = {},
     context: Context = LocalContext.current.applicationContext,
     viewModel: MainScreenViewModel = viewModel {
-        MainScreenViewModel(GeminiNanoAiEngine(context))
+        MainScreenViewModel(KoogGeminiNanoAiEngine(context))
     }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

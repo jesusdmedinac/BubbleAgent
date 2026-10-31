@@ -18,7 +18,7 @@ import com.google.mlkit.genai.prompt.modelConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class BubbleAgentManager(private val context: Context) {
+open class BubbleAgentManager(private val context: Context? = null) {
 
     private val systemInstructions = """
         You are Bubble, an empathetic on-device digital wellbeing assistant running privately on Android via Gemini Nano.
@@ -58,7 +58,11 @@ class BubbleAgentManager(private val context: Context) {
 
     private val runner: AgentRunner by lazy {
         try {
-            AgentRunner(context, agent, generativeModel)
+            if (context != null) {
+                AgentRunner(context, agent, generativeModel)
+            } else {
+                AgentRunner(agent)
+            }
         } catch (e: Exception) {
             Log.e("BubbleAgent", "Failed to initialize AgentRunner with custom model, using default: ${e.message}")
             AgentRunner(agent)
@@ -69,7 +73,7 @@ class BubbleAgentManager(private val context: Context) {
         runner.getOrCreateSession("bubble_interview_session")
     }
 
-    fun streamChat(userPrompt: String): Flow<String> = flow {
+    open fun streamChat(userPrompt: String): Flow<String> = flow {
         // Attempt 1: AgentRunner with session and AppFunctions tool calling
         var streamedTokens = 0
         try {
@@ -126,7 +130,7 @@ class BubbleAgentManager(private val context: Context) {
         }
     }
 
-    fun close() {
+    open fun close() {
         try {
             session.close()
         } catch (ignored: Exception) {}
