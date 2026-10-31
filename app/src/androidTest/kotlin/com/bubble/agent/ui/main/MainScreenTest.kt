@@ -19,6 +19,6 @@ class MainScreenTest {
 
     @Test
     fun emptyCanvas_greetingAndPrivacyChipExist() {
-        composeTestRule.onNodeWithText("Local First • 100% Private chat").assertExists()
+        composeTestRule.onNodeWithText("Gemini Nano On-Device • 100% Privado").assertExists()
     }
 }

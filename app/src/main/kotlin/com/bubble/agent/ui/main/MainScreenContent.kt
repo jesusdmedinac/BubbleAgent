@@ -38,15 +38,18 @@ import com.bubble.agent.ui.theme.TextSecondary
 fun MainScreenContent(
     uiState: ChatUiState,
     listState: LazyListState,
-    modifier: Modifier,
-    onRefreshUsageStats: () -> Unit,
-    onModelSelect: () -> Unit,
-    onNewChat: () -> Unit,
-    onProfileClick: () -> Unit,
-    onInputChanged: (String) -> Unit,
-    onSendMessage: () -> Unit,
-    healthSnapshot: DigitalHealthSnapshot,
-    activities: List<RecommendedActivity>
+    modifier: Modifier = Modifier,
+    onRefreshUsageStats: () -> Unit = {},
+    onModelSelect: () -> Unit = {},
+    onNewChat: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onInputChanged: (String) -> Unit = {},
+    onSendMessage: () -> Unit = {},
+    onOpenSettingsClick: () -> Unit = {},
+    onToggleActivity: (String) -> Unit = {},
+    onSimulateMcpClick: () -> Unit = {},
+    healthSnapshot: DigitalHealthSnapshot = DigitalHealthSnapshot(),
+    activities: List<RecommendedActivity> = emptyList()
 ) {
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
@@ -85,24 +88,7 @@ fun MainScreenContent(
         ) {
             item { Spacer(modifier = Modifier.height(8.dp)) }
 
-            // 1. Top Section: Digital Health Snapshot Card
-            item {
-                DigitalHealthCard(
-                    snapshot = healthSnapshot,
-                    onOpenSettingsClick = { /* Open usage settings */ }
-                )
-            }
-
-            // 2. Middle Section: Recommended Activities from Gemini (Android MCP / AppFunctions)
-            item {
-                RecommendedActivitiesSection(
-                    activities = activities,
-                    onToggleActivity = { /* Toggle activity */ },
-                    onSimulateMcpClick = { /* Simulate MCP click */ }
-                )
-            }
-
-            // 3. Conversation Section Header / Empty Greeting
+            // Conversation Section Header / Empty Greeting
             if (uiState.messages.isEmpty()) {
                 item {
                     EmptyChatCanvas(

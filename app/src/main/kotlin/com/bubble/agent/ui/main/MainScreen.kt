@@ -24,16 +24,19 @@ fun MainScreen(
     val listState = rememberLazyListState()
 
     MainScreenContent(
-        uiState,
-        listState,
-        modifier,
+        uiState = uiState,
+        listState = listState,
+        modifier = modifier,
         onRefreshUsageStats = viewModel::onRefreshUsageStats,
         onModelSelect = { },
         onNewChat = viewModel::onNewChatClicked,
         onProfileClick = { },
         onInputChanged = viewModel::onInputTextChanged,
         onSendMessage = viewModel::onSendMessage,
-        healthSnapshot,
-        activities,
+        onOpenSettingsClick = { viewModel.onOpenUsageSettings(context) },
+        onToggleActivity = viewModel::onToggleActivityCompleted,
+        onSimulateMcpClick = viewModel::simulateGeminiMcpInvocation,
+        healthSnapshot = healthSnapshot,
+        activities = activities,
     )
 }

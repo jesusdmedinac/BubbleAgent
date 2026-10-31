@@ -91,10 +91,10 @@ class MainScreenViewModelTest {
     }
 
     @Test
-    fun uiState_sendMessage_clearsInputAndAddsUserAndAssistantMessage() = runTest {
+    fun uiState_onSendMessage_clearsInputAndAddsUserAndAssistantMessage() = runTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Tocar guitarra")
-        viewModel.sendMessage()
+        viewModel.onSendMessage()
 
         val state = viewModel.uiState.first()
         assertEquals("", state.inputText)
@@ -108,7 +108,7 @@ class MainScreenViewModelTest {
     fun uiState_onNewChatClicked_clearsConversation() = runTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Mensaje 1")
-        viewModel.sendMessage()
+        viewModel.onSendMessage()
         viewModel.onNewChatClicked()
 
         val state = viewModel.uiState.first()
