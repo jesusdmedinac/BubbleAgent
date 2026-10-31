@@ -1,0 +1,122 @@
+package com.bubble.agent.ui.profile
+
+import com.bubble.agent.data.model.DigitalHealthSnapshot
+import com.bubble.agent.data.model.OfflineProfile
+import com.bubble.agent.data.model.RecommendedActivity
+import com.bubble.agent.data.model.VaultCategory
+import com.bubble.agent.data.model.VaultMemoryItem
+import com.bubble.agent.data.repository.BubbleRepository
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
+
+class FakeProfileBubbleRepository : BubbleRepository {
+    private val _offlineProfile = MutableStateFlow(OfflineProfile())
+    override val offlineProfile: StateFlow<OfflineProfile> = _offlineProfile.asStateFlow()
+
+    private val _recommendedActivities = MutableStateFlow<List<RecommendedActivity>>(emptyList())
+    override val recommendedActivities: StateFlow<List<RecommendedActivity>> = _recommendedActivities.asStateFlow()
+
+    private val _digitalHealthSnapshot = MutableStateFlow(
+        DigitalHealthSnapshot(
+            totalScreenTimeMinutes = 134, // 2h 14m
+            potentialRecoverableMinutes = 90,
+            topApps = emptyList(),
+            isPermissionGranted = true,
+            offlineInterests = listOf("Tocar guitarra acústica")
+        )
+    )
+    override val digitalHealthSnapshot: StateFlow<DigitalHealthSnapshot> = _digitalHealthSnapshot.asStateFlow()
+
+    private val _vaultMemories = MutableStateFlow(
+        listOf(
+            VaultMemoryItem(
+                tag = "META OFFLINE",
+                category = VaultCategory.OFFLINE_GOAL,
+                title = "Practicar guitarra acústica",
+                source = "Gemini Nano",
+                timestampFormatted = "Hace 2h",
+                footerDetail = "SQLite"
+            ),
+            VaultMemoryItem(
+                tag = "HÁBITO DETECTADO",
+                category = VaultCategory.MCP_HABIT,
+                title = "14 desbloqueos compulsivos",
+                source = "Android MCP",
+                timestampFormatted = "Hoy 3:15 PM",
+                footerDetail = "AppUsageTracker"
+            ),
+            VaultMemoryItem(
+                tag = "PREFERENCIA",
+                category = VaultCategory.PREFERENCE,
+                title = "Silenciar notificaciones",
+                source = "Context Center",
+                timestampFormatted = "Ayer",
+                footerDetail = "DND"
+            )
+        )
+    )
+    override val vaultMemories: StateFlow<List<VaultMemoryItem>> = _vaultMemories.asStateFlow()
+
+    override fun updateProfile(profile: OfflineProfile) {
+        _offlineProfile.value = profile
+    }
+
+    override fun addInterest(interest: String) {
+        _offlineProfile.update { it.copy(interests = it.interests + interest) }
+    }
+
+    override fun saveRecommendedActivity(
+        title: String,
+        category: String,
+        estimatedMinutes: Int,
+        reason: String
+    ): RecommendedActivity {
+        val act = RecommendedActivity(title = title, category = category, estimatedMinutes = estimatedMinutes, reason = reason)
+        _recommendedActivities.update { listOf(act) + it }
+        return act
+    }
+
+    override fun toggleActivityCompleted(id: String) {}
+    override fun refreshSnapshot() {}
+    override fun addVaultMemory(item: VaultMemoryItem) {
+        _vaultMemories.update { listOf(item) + it }
+    }
+    override fun deleteVaultMemory(id: String) {
+        _vaultMemories.update { current -> current.filter { it.id != id } }
+    }
+}
+
+class ProfileVaultViewModelTest {
+
+    @Test
+    fun initialState_loadsScreenTimeAndMemories() = runTest {
+        val repository = FakeProfileBubbleRepository()
+        val viewModel = ProfileVaultViewModel(repository)
+
+        val state = viewModel.uiState.first { it.displayedMemories.isNotEmpty() }
+
+        assertEquals("Jesús Daniel Medina", state.userName)
+        assertEquals(2L, state.screenTimeHours)
+        assertEquals(14L, state.screenTimeMinutes)
+        assertEquals(3, state.displayedMemories.size)
+    }
+
+    @Test
+    fun filterByCategory_updatesDisplayedMemories() = runTest {
+        val repository = FakeProfileBubbleRepository()
+        val viewModel = ProfileVaultViewModel(repository)
+
+        viewModel.onCategorySelected(VaultCategory.OFFLINE_GOAL)
+
+        val state = viewModel.uiState.first { it.selectedCategory == VaultCategory.OFFLINE_GOAL }
+        assertEquals(1, state.displayedMemories.size)
+        assertEquals("META OFFLINE", state.displayedMemories.first().tag)
+    }
+}

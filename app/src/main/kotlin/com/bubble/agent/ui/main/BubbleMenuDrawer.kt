@@ -60,6 +60,7 @@ fun BubbleMenuDrawer(
     onChallengesClick: () -> Unit = {},
     onScreenTimeClick: () -> Unit = {},
     onRecentQueryClick: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     userName: String = "Jesús Medina",
     userPlan: String = "Pro Account",
@@ -247,6 +248,10 @@ fun BubbleMenuDrawer(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onProfileClick() }
+                    .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {

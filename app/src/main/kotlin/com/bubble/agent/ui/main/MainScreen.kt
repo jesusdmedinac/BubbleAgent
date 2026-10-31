@@ -39,6 +39,7 @@ import com.bubble.agent.ui.theme.BubbleCyan
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
+    onProfileClick: () -> Unit = {},
     context: Context = LocalContext.current.applicationContext,
     viewModel: MainScreenViewModel = viewModel {
         MainScreenViewModel(GeminiNanoAiEngine(context))
@@ -86,11 +87,18 @@ fun MainScreen(
             onFocusModeClick = { isDrawerOpen = false },
             onAppsClick = { isDrawerOpen = false },
             onChallengesClick = { isDrawerOpen = false },
-            onScreenTimeClick = { isDrawerOpen = false },
+            onScreenTimeClick = {
+                isDrawerOpen = false
+                onProfileClick()
+            },
             onRecentQueryClick = { query ->
                 isDrawerOpen = false
                 viewModel.onInputTextChanged(query)
                 viewModel.onSendMessage()
+            },
+            onProfileClick = {
+                isDrawerOpen = false
+                onProfileClick()
             },
             onSettingsClick = {
                 isDrawerOpen = false
@@ -134,7 +142,7 @@ fun MainScreen(
                 onRefreshUsageStats = viewModel::onRefreshUsageStats,
                 onModelSelect = { },
                 onNewChat = viewModel::onNewChatClicked,
-                onProfileClick = { },
+                onProfileClick = onProfileClick,
                 onInputChanged = viewModel::onInputTextChanged,
                 onSendMessage = viewModel::onSendMessage,
                 onOpenSettingsClick = { viewModel.onOpenUsageSettings(context) },

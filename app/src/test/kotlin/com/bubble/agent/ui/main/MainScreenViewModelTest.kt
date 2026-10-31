@@ -4,6 +4,7 @@ import com.bubble.agent.ai.MockAiEngine
 import com.bubble.agent.data.model.DigitalHealthSnapshot
 import com.bubble.agent.data.model.OfflineProfile
 import com.bubble.agent.data.model.RecommendedActivity
+import com.bubble.agent.data.model.VaultMemoryItem
 import com.bubble.agent.data.repository.BubbleRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -61,6 +62,17 @@ class FakeBubbleRepository : BubbleRepository {
         _recommendedActivities.update { current ->
             current.map { if (it.id == id) it.copy(isCompleted = !it.isCompleted) else it }
         }
+    }
+
+    private val _vaultMemories = MutableStateFlow<List<VaultMemoryItem>>(emptyList())
+    override val vaultMemories: StateFlow<List<VaultMemoryItem>> = _vaultMemories.asStateFlow()
+
+    override fun addVaultMemory(item: VaultMemoryItem) {
+        _vaultMemories.update { listOf(item) + it }
+    }
+
+    override fun deleteVaultMemory(id: String) {
+        _vaultMemories.update { current -> current.filter { it.id != id } }
     }
 
     override fun refreshSnapshot() {}

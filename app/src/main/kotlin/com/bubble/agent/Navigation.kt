@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.bubble.agent.ui.main.MainScreen
+import com.bubble.agent.ui.profile.ProfileVaultScreen
 
 @Composable
 fun MainNavigation() {
@@ -15,7 +16,14 @@ fun MainNavigation() {
         onBack = { backStack.removeLastOrNull() },
         entryProvider = entryProvider {
             entry<Main> {
-                MainScreen()
+                MainScreen(
+                    onProfileClick = { backStack.add(ProfileVault) }
+                )
+            }
+            entry<ProfileVault> {
+                ProfileVaultScreen(
+                    onClose = { backStack.removeLastOrNull() }
+                )
             }
         }
     )

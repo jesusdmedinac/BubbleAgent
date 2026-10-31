@@ -24,6 +24,7 @@ val BubbleCyan = Color(0xFF1BB5C6)
 val BubbleCyanDark = Color(0xFF16808C)
 val AccentGold = Color(0xFFF5A623)
 val AccentGreen = Color(0xFF4EBA87)
+val StatusSuccess = Color(0xFF10B981)
 val AccentFlame = Color(0xFFFF6B4A)
 val AccentBlue = Color(0xFF5C8DEF)
 
