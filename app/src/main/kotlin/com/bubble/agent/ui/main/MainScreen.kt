@@ -279,9 +279,11 @@ fun DigitalHealthCard(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Demo • Conceder Acceso",
+                            text = "Acceso",
                             color = BubbleCyan,
-                            fontSize = 10.sp,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            softWrap = false,
                             fontWeight = FontWeight.SemiBold,
                             fontFamily = FontFamily.SansSerif
                         )
@@ -396,9 +398,10 @@ fun RecommendedActivitiesSection(
                     modifier = Modifier.size(15.dp)
                 )
                 Text(
-                    text = "Actividades Sugeridas (Gemini MCP)",
+                    text = "Sugerencias MCP",
                     color = TextPrimary,
                     fontSize = 13.sp,
+                    maxLines = 1,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = FontFamily.SansSerif
                 )
@@ -424,6 +427,8 @@ fun RecommendedActivitiesSection(
                     text = "Simular MCP",
                     color = BubbleCyan,
                     fontSize = 11.sp,
+                    maxLines = 1,
+                    softWrap = false,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.SansSerif
                 )
