@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
-    appfn:description="Bubble Digital Wellbeing Assistant manages user screen time awareness and offline hobbies.
+    appfn:description="Bubble Digital Wellbeing and App Store Assistant manages user screen time awareness, offline hobbies, and discovers mindful applications.
     Operational Patterns:
     - Call 'getDigitalHealthSnapshot' to obtain current screen time and offline profile.
     - Call 'getUserOfflineInterests' to retrieve user favorite offline activities.
-    - Call 'saveRecommendedActivity' to suggest actionable offline replacements for screen time."
+    - Call 'saveRecommendedActivity' to suggest actionable offline replacements for screen time.
+    - Call 'searchStoreApps' to search for applications in the Bubble App Store catalog.
+    - Call 'listMindfulApps' to discover curated low-distraction and wellbeing-oriented applications.
+    - Call 'getStoreAppDetails' to view full details and installation state of an application.
+    - Call 'launchStoreApp' to launch an installed application on the device.
+    Constraints:
+    - Parameter 'packageName' in getStoreAppDetails and launchStoreApp must not be blank."
     appfn:displayDescription="@string/app_name" />

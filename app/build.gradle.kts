@@ -6,10 +6,10 @@ plugins {
 }
 
 android {
-  namespace = "com.bubble.agent"
+  namespace = "com.jesusdmedinac.bubble"
   compileSdk = 37
   defaultConfig {
-    applicationId = "com.bubble.agent"
+    applicationId = "com.jesusdmedinac.bubble"
     minSdk = 26
     targetSdk = 37
     versionCode = 1
