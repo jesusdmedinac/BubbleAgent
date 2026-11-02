@@ -33,7 +33,8 @@ import com.jesusdmedinac.bubble.ui.theme.TextSecondary
 @Composable
 fun ProfileVaultTopBar(
     onClose: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSecurityShieldClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -74,7 +75,8 @@ fun ProfileVaultTopBar(
                 .size(36.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF1B1B1F))
-                .border(1.dp, Color(0xFF2E2E33), CircleShape),
+                .border(1.dp, Color(0xFF2E2E33), CircleShape)
+                .clickable { onSecurityShieldClick() },
             contentAlignment = Alignment.Center
         ) {
             Icon(

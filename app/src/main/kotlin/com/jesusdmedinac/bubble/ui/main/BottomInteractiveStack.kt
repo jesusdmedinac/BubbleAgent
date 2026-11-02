@@ -22,7 +22,9 @@ fun BottomInteractiveStack(
     inputText: String,
     onInputChanged: (String) -> Unit,
     onSend: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAttachClick: () -> Unit = {},
+    onLiveAudioClick: () -> Unit = {},
 ) {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
@@ -42,7 +44,9 @@ fun BottomInteractiveStack(
         FloatingPromptBar(
             inputText = inputText,
             onInputChanged = onInputChanged,
-            onSend = onSend
+            onSend = onSend,
+            onAttachClick = onAttachClick,
+            onLiveAudioClick = onLiveAudioClick,
         )
     }
 }

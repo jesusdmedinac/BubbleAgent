@@ -1,5 +1,11 @@
 package com.jesusdmedinac.bubble.ui.main
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,12 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 import com.jesusdmedinac.bubble.ui.theme.FloatingBarBg
@@ -43,8 +49,23 @@ fun FloatingPromptBar(
     inputText: String,
     onInputChanged: (String) -> Unit,
     onSend: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAttachClick: () -> Unit = {},
+    onLiveAudioClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenText = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+            if (!spokenText.isNullOrBlank()) {
+                val updated = if (inputText.isBlank()) spokenText else "$inputText $spokenText"
+                onInputChanged(updated)
+            }
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -64,12 +85,12 @@ fun FloatingPromptBar(
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(GlassWhite06)
-                    .clickable { /* Attach */ },
+                    .clickable { onAttachClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = "Attach",
+                    contentDescription = "Adjuntar contexto",
                     tint = TextPrimary,
                     modifier = Modifier.size(18.dp)
                 )
@@ -105,25 +126,49 @@ fun FloatingPromptBar(
                 )
             }
 
-            // Voice / Mic Button
+            // Voice / Mic Button (Speech-to-Text)
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(GlassWhite06)
-                    .clickable { /* Voice Input */ },
+                    .clickable {
+                        try {
+                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(
+                                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                                )
+                                putExtra(
+                                    RecognizerIntent.EXTRA_PROMPT,
+                                    "Habla para dictar a Bubble..."
+                                )
+                            }
+                            speechLauncher.launch(intent)
+                        } catch (_: Exception) {
+                            Toast.makeText(
+                                context,
+                                "Reconocimiento de voz no disponible en este dispositivo",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Mic,
-                    contentDescription = "Voice Dictation",
+                    contentDescription = "Dictado por voz",
                     tint = TextPrimary,
                     modifier = Modifier.size(18.dp)
                 )
             }
 
             // Live / Audio Wave Button or Send Button
-            LiveAudioWaveOrSendButton(inputText, onSend)
+            LiveAudioWaveOrSendButton(
+                inputText = inputText,
+                onSend = onSend,
+                onLiveAudioClick = onLiveAudioClick
+            )
         }
     }
 }
@@ -135,7 +180,10 @@ fun FloatingPromptBarPreview() {
         FloatingPromptBar(
             inputText = "",
             onInputChanged = {},
-            onSend = {}
+            onSend = {},
+            onAttachClick = {},
+            onLiveAudioClick = {}
         )
     }
 }
+

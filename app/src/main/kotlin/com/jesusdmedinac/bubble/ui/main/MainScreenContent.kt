@@ -48,6 +48,8 @@ fun MainScreenContent(
     onProfileClick: () -> Unit = {},
     onInputChanged: (String) -> Unit = {},
     onSendMessage: () -> Unit = {},
+    onAttachClick: () -> Unit = {},
+    onLiveAudioClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
     onToggleActivity: (String) -> Unit = {},
     onSimulateMcpClick: () -> Unit = {},
@@ -77,7 +79,9 @@ fun MainScreenContent(
             BottomInteractiveStack(
                 inputText = uiState.inputText,
                 onInputChanged = onInputChanged,
-                onSend = onSendMessage
+                onSend = onSendMessage,
+                onAttachClick = onAttachClick,
+                onLiveAudioClick = onLiveAudioClick,
             )
         }
     ) { innerPadding ->

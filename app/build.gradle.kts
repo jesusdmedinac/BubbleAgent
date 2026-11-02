@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
@@ -6,20 +8,44 @@ plugins {
   alias(libs.plugins.sqldelight)
 }
 
+fun readEnvProperties(): Properties {
+  val properties = Properties()
+  val envFile = rootProject.file("env.properties")
+  if (envFile.exists()) {
+    properties.load(envFile.inputStream())
+  }
+  return properties
+}
+
 android {
   namespace = "com.jesusdmedinac.bubble"
   compileSdk = 37
   defaultConfig {
     applicationId = "com.jesusdmedinac.bubble"
     minSdk = 26
-    targetSdk = 37
-    versionCode = 1
-    versionName = "1.0"
+    targetSdk = 36
+    versionCode = 19
+    versionName = "1.2.0"
+  }
+
+  val env = readEnvProperties()
+
+  signingConfigs {
+    create("release") {
+      val keystorePath = env.getProperty("KEYSTORE_PATH_RELEASE")
+      if (!keystorePath.isNullOrBlank()) {
+        storeFile = rootProject.file(keystorePath)
+        storePassword = env.getProperty("KEYSTORE_PASSWORD") ?: ""
+        keyAlias = env.getProperty("KEY_ALIAS") ?: ""
+        keyPassword = env.getProperty("KEY_PASSWORD") ?: ""
+      }
+    }
   }
 
   buildTypes {
     release {
       isMinifyEnabled = false
+      signingConfig = signingConfigs.getByName("release")
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }

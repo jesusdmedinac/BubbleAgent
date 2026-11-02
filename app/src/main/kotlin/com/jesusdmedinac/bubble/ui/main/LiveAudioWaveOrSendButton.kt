@@ -27,6 +27,7 @@ import com.jesusdmedinac.bubble.ui.theme.GlassWhite06
 fun LiveAudioWaveOrSendButton(
     inputText: String,
     onSend: () -> Unit,
+    onLiveAudioClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -62,7 +63,7 @@ fun LiveAudioWaveOrSendButton(
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(GlassWhite06)
-                    .clickable { /* Audio Live Mode */ },
+                    .clickable { onLiveAudioClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

@@ -1,9 +1,5 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import com.jesusdmedinac.bubble.data.model.ChatMessage
-import com.jesusdmedinac.bubble.data.model.MessageSender
-
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,6 +24,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesusdmedinac.bubble.R
+import com.jesusdmedinac.bubble.data.model.ChatMessage
+import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan15
@@ -39,11 +33,16 @@ import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 import com.jesusdmedinac.bubble.ui.theme.TextPrimary
 import com.jesusdmedinac.bubble.ui.theme.TextSecondary
 
-
 @Composable
 fun BubbleAssistantMessage(
     message: ChatMessage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCopy: () -> Unit = {},
+    onAudio: () -> Unit = {},
+    onLike: () -> Unit = {},
+    onDislike: () -> Unit = {},
+    onShare: () -> Unit = {},
+    onMore: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -94,18 +93,19 @@ fun BubbleAssistantMessage(
             modifier = Modifier.padding(start = 28.dp)
         )
 
-        // Assistant Action Bar (Copy, Retry, Like)
-        Row(
+        // Assistant Action Bar containerless
+        BubbleAssistantActionBar(
+            messageText = message.text,
+            onCopy = onCopy,
+            onAudio = onAudio,
+            onLike = onLike,
+            onDislike = onDislike,
+            onShare = onShare,
+            onMore = onMore,
             modifier = Modifier
                 .padding(start = 28.dp)
-                .padding(top = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AssistantActionButton(icon = Icons.Rounded.ContentCopy, contentDescription = "Copy") { }
-            AssistantActionButton(icon = Icons.Rounded.Refresh, contentDescription = "Retry") { }
-            AssistantActionButton(icon = Icons.Rounded.ThumbUp, contentDescription = "Like") { }
-        }
+                .padding(top = 4.dp)
+        )
     }
 }
 

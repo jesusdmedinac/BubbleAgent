@@ -38,8 +38,8 @@ import com.jesusdmedinac.bubble.ui.theme.TextSecondary
 fun RecommendedActivitiesSection(
     activities: List<RecommendedActivity>,
     onToggleActivity: (String) -> Unit,
-    onSimulateMcpClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSimulateMcpClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -61,38 +61,11 @@ fun RecommendedActivitiesSection(
                     modifier = Modifier.size(15.dp)
                 )
                 Text(
-                    text = "Sugerencias MCP",
+                    text = "Sugerencias de Desconexión",
                     color = TextPrimary,
                     fontSize = 13.sp,
                     maxLines = 1,
                     fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.SansSerif
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(BubbleCyan15)
-                    .border(1.dp, BubbleCyan33, RoundedCornerShape(12.dp))
-                    .clickable { onSimulateMcpClick() }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = null,
-                    tint = BubbleCyan,
-                    modifier = Modifier.size(12.dp)
-                )
-                Text(
-                    text = "Simular MCP",
-                    color = BubbleCyan,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                    fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.SansSerif
                 )
             }

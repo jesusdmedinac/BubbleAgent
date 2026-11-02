@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +43,12 @@ fun ProfileVaultContent(
     onOpenSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var isSecurityDialogOpen by remember { mutableStateOf(false) }
+
+    if (isSecurityDialogOpen) {
+        VaultSecurityInfoDialog(onDismissRequest = { isSecurityDialogOpen = false })
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -55,7 +65,10 @@ fun ProfileVaultContent(
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 // 1. Navigation / Top Bar
-                ProfileVaultTopBar(onClose = onClose)
+                ProfileVaultTopBar(
+                    onClose = onClose,
+                    onSecurityShieldClick = { isSecurityDialogOpen = true }
+                )
             }
 
             item {
