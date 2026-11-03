@@ -133,4 +133,7 @@ dependencies {
 
   // Koog AI Agent Framework (JetBrains)
   implementation(libs.koog.agents)
+
+  // Server-Driven UI via json-to-compose
+  implementation(libs.json.to.compose)
 }

@@ -2,6 +2,7 @@ package com.jesusdmedinac.bubble.ui.main
 
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
 import com.jesusdmedinac.bubble.data.model.ChatMessage
+import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.data.model.OfflineProfile
@@ -99,6 +100,41 @@ class FakeBubbleRepository : BubbleRepository {
     private val _chatMessages = MutableStateFlow<List<ChatMessage>>(emptyList())
     override val chatMessages: StateFlow<List<ChatMessage>> = _chatMessages.asStateFlow()
 
+    private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
+    override val conversations: StateFlow<List<Conversation>> = _conversations.asStateFlow()
+
+    override fun getMessagesForConversation(conversationId: String): Flow<List<ChatMessage>> = flow {
+        emit(_chatMessages.value.filter { it.conversationId == conversationId })
+    }
+
+    override fun createOrUpdateConversation(id: String, title: String) {
+        _conversations.update { list ->
+            val existing = list.find { it.id == id }
+            if (existing != null) {
+                list.map { if (it.id == id) it.copy(title = title, updatedAt = System.currentTimeMillis()) else it }
+            } else {
+                listOf(Conversation(id = id, title = title)) + list
+            }
+        }
+    }
+
+    override fun updateConversationTimestamp(id: String) {
+        _conversations.update { list ->
+            list.map { if (it.id == id) it.copy(updatedAt = System.currentTimeMillis()) else it }
+        }
+    }
+
+    override fun deleteConversation(id: String) {
+        _conversations.update { list -> list.filter { it.id != id } }
+        _chatMessages.update { list -> list.filter { it.conversationId != id } }
+    }
+
+    override fun updateChatMessageSdui(id: String, sduiJson: String?) {
+        _chatMessages.update { list ->
+            list.map { if (it.id == id) it.copy(sduiJson = sduiJson) else it }
+        }
+    }
+
     override fun insertChatMessage(message: ChatMessage) {
         _chatMessages.update { it + message }
     }
@@ -164,17 +200,99 @@ class MainScreenViewModelTest {
     }
 
     @Test
-    fun uiState_recentQueries_extractsUserQueries() = runTest {
+    fun uiState_sameConversation_doesNotDuplicateRecentConversation() = runTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Cómo reducir screen time")
         viewModel.onSendMessage()
         viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating }
 
+        // Second message in the same conversation
         viewModel.onInputTextChanged("Aprender piano")
         viewModel.onSendMessage()
-        val state = viewModel.uiState.first { it.recentQueries.size == 2 && !it.isGenerating }
+        val state = viewModel.uiState.first { it.messages.size >= 4 && !it.isGenerating }
 
-        assertEquals(listOf("Aprender piano", "Cómo reducir screen time"), state.recentQueries)
+        // Must still be 1 conversation in recents
+        assertEquals(1, state.recentConversations.size)
+        assertEquals("Cómo reducir screen time", state.recentConversations[0].title)
+    }
+
+    @Test
+    fun uiState_newConversation_createsSecondRecentConversation() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onInputTextChanged("Cómo reducir screen time")
+        viewModel.onSendMessage()
+        viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating }
+
+        // Start a new chat
+        viewModel.onNewChatClicked()
+        viewModel.onInputTextChanged("Aprender piano")
+        viewModel.onSendMessage()
+        val state = viewModel.uiState.first { it.recentConversations.size == 2 && !it.isGenerating }
+
+        assertEquals(2, state.recentConversations.size)
+        assertEquals("Aprender piano", state.recentConversations[0].title)
+        assertEquals("Cómo reducir screen time", state.recentConversations[1].title)
+    }
+
+    @Test
+    fun uiState_onSelectConversation_switchesActiveMessages() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onInputTextChanged("Conversación 1")
+        viewModel.onSendMessage()
+        val firstState = viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating }
+        val firstConvId = firstState.currentConversationId
+
+        viewModel.onNewChatClicked()
+        viewModel.onInputTextChanged("Conversación 2")
+        viewModel.onSendMessage()
+        val secondState = viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating && it.currentConversationId != firstConvId }
+        val secondConvId = secondState.currentConversationId
+
+        // Switch back to conversation 1 without sending any message
+        viewModel.onSelectConversation(firstConvId)
+        val switchedState = viewModel.uiState.first { it.currentConversationId == firstConvId }
+        assertEquals("Conversación 1", switchedState.messages.first { it.sender == MessageSender.USER }.text)
+    }
+
+    @Test
+    fun sdui_vaultMemoryCandidate_detectedAndConfirmed() = runTest {
+        val repo = FakeBubbleRepository()
+        val viewModel = MainScreenViewModel(
+            aiEngine = ImmediateAiEngine(),
+            repository = repo
+        )
+        viewModel.onInputTextChanged("Quiero aprender guitarra acústica hoy")
+        viewModel.onSendMessage()
+
+        val state = viewModel.uiState.first { it.messages.size >= 2 && !it.isGenerating && it.messages.any { msg -> msg.sduiJson != null } }
+        val assistantMsg = state.messages.first { it.sender == MessageSender.BUBBLE }
+        assertTrue(assistantMsg.sduiJson != null)
+        assertTrue(assistantMsg.sduiJson!!.contains("confirm_vault"))
+
+        // Simulate user confirming via json-to-compose custom action
+        viewModel.onCustomAction(
+            com.jesusdmedinac.jsontocompose.model.ComposeAction.Custom(
+                customType = com.jesusdmedinac.bubble.ui.main.sdui.BubbleSduiTemplates.ACTION_CONFIRM_VAULT,
+                params = kotlinx.serialization.json.buildJsonObject {
+                    put("title", kotlinx.serialization.json.JsonPrimitive("Interés en práctica musical (guitarra acústica)"))
+                    put("tag", kotlinx.serialization.json.JsonPrimitive("MÚSICA"))
+                    put("category", kotlinx.serialization.json.JsonPrimitive("PREFERENCE"))
+                }
+            ),
+            assistantMsg.id
+        )
+
+        // Verify it was persisted to repo.vaultMemories
+        val memories = repo.vaultMemories.first()
+        assertEquals(1, memories.size)
+        assertEquals("Interés en práctica musical (guitarra acústica)", memories[0].title)
+
+        // Verify message SDUI was updated with success card
+        val updatedState = viewModel.uiState.first { s ->
+            s.messages.firstOrNull { it.id == assistantMsg.id }?.sduiJson?.contains("Guardado en tu Vault") == true
+        }
+        val updatedAssistantMsg = updatedState.messages.first { it.id == assistantMsg.id }
+        assertTrue(updatedAssistantMsg.sduiJson!!.contains("Guardado en tu Vault"))
     }
 
     @Test

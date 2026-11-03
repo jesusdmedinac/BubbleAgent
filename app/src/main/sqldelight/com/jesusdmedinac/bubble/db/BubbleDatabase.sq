@@ -1,9 +1,55 @@
+CREATE TABLE ConversationEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+selectAllConversations:
+SELECT *
+FROM ConversationEntity
+ORDER BY updatedAt DESC;
+
+getConversationById:
+SELECT *
+FROM ConversationEntity
+WHERE id = ?;
+
+insertConversation:
+INSERT OR REPLACE INTO ConversationEntity(id, title, createdAt, updatedAt)
+VALUES (?, ?, ?, ?);
+
+updateConversationTitle:
+UPDATE ConversationEntity
+SET title = ?, updatedAt = ?
+WHERE id = ?;
+
+updateConversationTimestamp:
+UPDATE ConversationEntity
+SET updatedAt = ?
+WHERE id = ?;
+
+deleteConversation:
+DELETE FROM ConversationEntity
+WHERE id = ?;
+
+clearAllConversations:
+DELETE FROM ConversationEntity;
+
 CREATE TABLE ChatMessageEntity (
     id TEXT NOT NULL PRIMARY KEY,
+    conversationId TEXT NOT NULL,
     sender TEXT NOT NULL,
     text TEXT NOT NULL,
-    timestamp INTEGER NOT NULL
+    timestamp INTEGER NOT NULL,
+    sduiJson TEXT
 );
+
+selectMessagesByConversation:
+SELECT *
+FROM ChatMessageEntity
+WHERE conversationId = ?
+ORDER BY timestamp ASC;
 
 selectAllMessages:
 SELECT *
@@ -11,13 +57,22 @@ FROM ChatMessageEntity
 ORDER BY timestamp ASC;
 
 insertMessage:
-INSERT OR REPLACE INTO ChatMessageEntity(id, sender, text, timestamp)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO ChatMessageEntity(id, conversationId, sender, text, timestamp, sduiJson)
+VALUES (?, ?, ?, ?, ?, ?);
 
 updateMessageText:
 UPDATE ChatMessageEntity
 SET text = ?
 WHERE id = ?;
+
+updateMessageSdui:
+UPDATE ChatMessageEntity
+SET sduiJson = ?
+WHERE id = ?;
+
+deleteMessagesByConversation:
+DELETE FROM ChatMessageEntity
+WHERE conversationId = ?;
 
 deleteMessage:
 DELETE FROM ChatMessageEntity

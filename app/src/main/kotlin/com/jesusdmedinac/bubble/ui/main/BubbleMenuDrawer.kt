@@ -36,9 +36,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.ui.theme.AccentGold
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
+import com.jesusdmedinac.bubble.ui.theme.BubbleCyan15
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 import com.jesusdmedinac.bubble.ui.theme.Gold20
 import com.jesusdmedinac.bubble.ui.theme.TextMuted
@@ -57,9 +59,12 @@ fun BubbleMenuDrawer(
     onChallengesClick: () -> Unit = {},
     onScreenTimeClick: () -> Unit = {},
     onRecentQueryClick: (String) -> Unit = {},
+    onConversationClick: (String) -> Unit = onRecentQueryClick,
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     recentQueries: List<String> = emptyList(),
+    recentConversations: List<Conversation> = emptyList(),
+    currentConversationId: String = "",
     userName: String = "Jesús Medina",
     userPlan: String = "Pro Account",
     modifier: Modifier = Modifier
@@ -204,15 +209,40 @@ fun BubbleMenuDrawer(
                     fontFamily = FontFamily.SansSerif
                 )
 
-                if (recentQueries.isEmpty()) {
-                    Text(
-                        text = "Sin conversaciones recientes",
-                        color = TextMuted,
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.SansSerif,
-                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
-                    )
-                } else {
+                if (recentConversations.isNotEmpty()) {
+                    recentConversations.forEach { conv ->
+                        val isSelected = conv.id == currentConversationId
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isSelected) BubbleCyan15 else Color.Transparent)
+                                .clickable { onConversationClick(conv.id) }
+                                .padding(vertical = 6.dp, horizontal = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(4.dp)
+                                        .clip(CircleShape)
+                                        .background(BubbleCyan)
+                                )
+                            }
+                            Text(
+                                text = conv.title.ifBlank { "Conversación" },
+                                color = if (isSelected) BubbleCyan else TextSecondary,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontFamily = FontFamily.SansSerif,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                } else if (recentQueries.isNotEmpty()) {
                     recentQueries.forEach { query ->
                         Text(
                             text = query,
@@ -228,6 +258,14 @@ fun BubbleMenuDrawer(
                                 .padding(vertical = 4.dp, horizontal = 2.dp)
                         )
                     }
+                } else {
+                    Text(
+                        text = "Sin conversaciones recientes",
+                        color = TextMuted,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
+                    )
                 }
             }
         }

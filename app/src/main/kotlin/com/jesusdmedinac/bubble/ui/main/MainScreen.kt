@@ -135,10 +135,13 @@ fun MainScreen(
                 isDrawerOpen = false
                 onProfileClick()
             },
+            onConversationClick = { convId ->
+                isDrawerOpen = false
+                viewModel.onSelectConversation(convId)
+            },
             onRecentQueryClick = { query ->
                 isDrawerOpen = false
-                viewModel.onInputTextChanged(query)
-                viewModel.onSendMessage()
+                viewModel.onSelectConversationByTitle(query)
             },
             onProfileClick = {
                 isDrawerOpen = false
@@ -150,6 +153,8 @@ fun MainScreen(
             },
             userName = uiState.userName,
             userPlan = "Pro Account",
+            recentConversations = uiState.recentConversations,
+            currentConversationId = uiState.currentConversationId,
             recentQueries = uiState.recentQueries,
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.statusBars)
@@ -199,6 +204,7 @@ fun MainScreen(
                 onOpenSettingsClick = { viewModel.onOpenUsageSettings(context) },
                 onToggleActivity = viewModel::onToggleActivityCompleted,
                 onSimulateMcpClick = viewModel::simulateGeminiMcpInvocation,
+                onCustomAction = viewModel::onCustomAction,
                 healthSnapshot = healthSnapshot,
                 activities = activities,
             )

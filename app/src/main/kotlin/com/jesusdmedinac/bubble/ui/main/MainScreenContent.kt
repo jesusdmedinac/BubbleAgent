@@ -53,6 +53,7 @@ fun MainScreenContent(
     onOpenSettingsClick: () -> Unit = {},
     onToggleActivity: (String) -> Unit = {},
     onSimulateMcpClick: () -> Unit = {},
+    onCustomAction: (com.jesusdmedinac.jsontocompose.model.ComposeAction.Custom, String) -> Unit = { _, _ -> },
     healthSnapshot: DigitalHealthSnapshot = DigitalHealthSnapshot(),
     activities: List<RecommendedActivity> = emptyList()
 ) {
@@ -141,7 +142,10 @@ fun MainScreenContent(
                 items(uiState.messages, key = { it.id }) { msg ->
                     when (msg.sender) {
                         MessageSender.USER -> UserMessageBubble(message = msg)
-                        MessageSender.BUBBLE -> BubbleAssistantMessage(message = msg)
+                        MessageSender.BUBBLE -> BubbleAssistantMessage(
+                            message = msg,
+                            onCustomAction = { action -> onCustomAction(action, msg.id) }
+                        )
                     }
                 }
                 if (uiState.isGenerating) {

@@ -3,6 +3,7 @@ package com.jesusdmedinac.bubble.data.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.jesusdmedinac.bubble.data.model.ChatMessage
+import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.data.model.OfflineProfile
@@ -15,6 +16,7 @@ import com.jesusdmedinac.bubble.db.BubbleDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +31,7 @@ interface BubbleRepository {
     val recommendedActivities: StateFlow<List<RecommendedActivity>>
     val digitalHealthSnapshot: StateFlow<DigitalHealthSnapshot>
     val vaultMemories: StateFlow<List<VaultMemoryItem>>
+    val conversations: StateFlow<List<Conversation>>
     val chatMessages: StateFlow<List<ChatMessage>>
     val storeApps: StateFlow<List<StoreAppItem>>
 
@@ -49,9 +52,14 @@ interface BubbleRepository {
     fun addVaultMemory(item: VaultMemoryItem)
     fun deleteVaultMemory(id: String)
 
-    // Local Chat Persistence
+    // Local Chat & Multi-Conversation Persistence
+    fun getMessagesForConversation(conversationId: String): Flow<List<ChatMessage>>
+    fun createOrUpdateConversation(id: String, title: String)
+    fun updateConversationTimestamp(id: String)
+    fun deleteConversation(id: String)
     fun insertChatMessage(message: ChatMessage)
     fun updateChatMessageText(id: String, text: String)
+    fun updateChatMessageSdui(id: String, sduiJson: String?)
     fun clearChatMessages()
 }
 
@@ -125,6 +133,28 @@ class BubbleRepositoryImpl(
         _inMemoryActivities.asStateFlow()
     }
 
+    // SQLDelight Reactive Conversations
+    private val _inMemoryConversations = MutableStateFlow<List<Conversation>>(emptyList())
+    override val conversations: StateFlow<List<Conversation>> = if (database != null) {
+        database.bubbleDatabaseQueries
+            .selectAllConversations()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { entities ->
+                entities.map { entity ->
+                    Conversation(
+                        id = entity.id,
+                        title = entity.title,
+                        createdAt = entity.createdAt,
+                        updatedAt = entity.updatedAt
+                    )
+                }
+            }
+            .stateIn(coroutineScope, SharingStarted.Eagerly, emptyList())
+    } else {
+        _inMemoryConversations.asStateFlow()
+    }
+
     // SQLDelight Reactive Chat Messages (No seed data, empty by default)
     private val _inMemoryChat = MutableStateFlow<List<ChatMessage>>(emptyList())
     override val chatMessages: StateFlow<List<ChatMessage>> = if (database != null) {
@@ -141,9 +171,11 @@ class BubbleRepositoryImpl(
                     }
                     ChatMessage(
                         id = entity.id,
+                        conversationId = entity.conversationId,
                         sender = sender,
                         text = entity.text,
-                        timestamp = entity.timestamp
+                        timestamp = entity.timestamp,
+                        sduiJson = entity.sduiJson
                     )
                 }
             }
@@ -270,14 +302,92 @@ class BubbleRepositoryImpl(
         }
     }
 
+    override fun getMessagesForConversation(conversationId: String): Flow<List<ChatMessage>> {
+        return if (database != null) {
+            database.bubbleDatabaseQueries
+                .selectMessagesByConversation(conversationId)
+                .asFlow()
+                .mapToList(Dispatchers.IO)
+                .map { entities ->
+                    entities.map { entity ->
+                        val sender = try {
+                            MessageSender.valueOf(entity.sender)
+                        } catch (_: Exception) {
+                            MessageSender.BUBBLE
+                        }
+                        ChatMessage(
+                            id = entity.id,
+                            conversationId = entity.conversationId,
+                            sender = sender,
+                            text = entity.text,
+                            timestamp = entity.timestamp,
+                            sduiJson = entity.sduiJson
+                        )
+                    }
+                }
+        } else {
+            _inMemoryChat.map { list -> list.filter { it.conversationId == conversationId } }
+        }
+    }
+
+    override fun createOrUpdateConversation(id: String, title: String) {
+        val now = System.currentTimeMillis()
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.insertConversation(
+                    id = id,
+                    title = title,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            }
+        } else {
+            _inMemoryConversations.update { list ->
+                val existing = list.find { it.id == id }
+                if (existing != null) {
+                    list.map { if (it.id == id) it.copy(title = title, updatedAt = now) else it }
+                } else {
+                    listOf(Conversation(id = id, title = title, createdAt = now, updatedAt = now)) + list
+                }
+            }
+        }
+    }
+
+    override fun updateConversationTimestamp(id: String) {
+        val now = System.currentTimeMillis()
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.updateConversationTimestamp(updatedAt = now, id = id)
+            }
+        } else {
+            _inMemoryConversations.update { list ->
+                list.map { if (it.id == id) it.copy(updatedAt = now) else it }
+            }
+        }
+    }
+
+    override fun deleteConversation(id: String) {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.deleteMessagesByConversation(id)
+                database.bubbleDatabaseQueries.deleteConversation(id)
+            }
+        } else {
+            _inMemoryConversations.update { list -> list.filter { it.id != id } }
+            _inMemoryChat.update { list -> list.filter { it.conversationId != id } }
+        }
+    }
+
     override fun insertChatMessage(message: ChatMessage) {
         if (database != null) {
             coroutineScope.launch {
                 database.bubbleDatabaseQueries.insertMessage(
                     id = message.id,
+                    conversationId = message.conversationId,
                     sender = message.sender.name,
                     text = message.text,
-                    timestamp = message.timestamp
+                    timestamp = message.timestamp,
+                    sduiJson = message.sduiJson
                 )
             }
         } else {
@@ -297,13 +407,27 @@ class BubbleRepositoryImpl(
         }
     }
 
+    override fun updateChatMessageSdui(id: String, sduiJson: String?) {
+        if (database != null) {
+            coroutineScope.launch {
+                database.bubbleDatabaseQueries.updateMessageSdui(sduiJson = sduiJson, id = id)
+            }
+        } else {
+            _inMemoryChat.update { list ->
+                list.map { if (it.id == id) it.copy(sduiJson = sduiJson) else it }
+            }
+        }
+    }
+
     override fun clearChatMessages() {
         if (database != null) {
             coroutineScope.launch {
                 database.bubbleDatabaseQueries.clearAllMessages()
+                database.bubbleDatabaseQueries.clearAllConversations()
             }
         } else {
             _inMemoryChat.value = emptyList()
+            _inMemoryConversations.value = emptyList()
         }
     }
 

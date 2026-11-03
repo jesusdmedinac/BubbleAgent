@@ -17,6 +17,7 @@ nav3Core = "1.0.1"
 lifecycleViewmodelNav3 = "2.10.0"
 sqldelight = "2.4.1"
 koog = "1.3.0"
+json-to-compose = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -48,6 +49,7 @@ androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+json-to-compose = { module = "com.jesusdmedinac:json-to-compose", version.ref = "json-to-compose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

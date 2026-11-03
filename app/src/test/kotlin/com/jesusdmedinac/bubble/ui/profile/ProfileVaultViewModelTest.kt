@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.profile
 
+import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.data.model.OfflineProfile
 import com.jesusdmedinac.bubble.data.model.RecommendedActivity
@@ -9,10 +10,12 @@ import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -110,6 +113,41 @@ class FakeProfileBubbleRepository : BubbleRepository {
 
     private val _chatMessages = MutableStateFlow<List<com.jesusdmedinac.bubble.data.model.ChatMessage>>(emptyList())
     override val chatMessages: StateFlow<List<com.jesusdmedinac.bubble.data.model.ChatMessage>> = _chatMessages.asStateFlow()
+
+    private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
+    override val conversations: StateFlow<List<Conversation>> = _conversations.asStateFlow()
+
+    override fun getMessagesForConversation(conversationId: String): Flow<List<com.jesusdmedinac.bubble.data.model.ChatMessage>> = flow {
+        emit(_chatMessages.value.filter { it.conversationId == conversationId })
+    }
+
+    override fun createOrUpdateConversation(id: String, title: String) {
+        _conversations.update { list ->
+            val existing = list.find { it.id == id }
+            if (existing != null) {
+                list.map { if (it.id == id) it.copy(title = title, updatedAt = System.currentTimeMillis()) else it }
+            } else {
+                listOf(Conversation(id = id, title = title)) + list
+            }
+        }
+    }
+
+    override fun updateConversationTimestamp(id: String) {
+        _conversations.update { list ->
+            list.map { if (it.id == id) it.copy(updatedAt = System.currentTimeMillis()) else it }
+        }
+    }
+
+    override fun deleteConversation(id: String) {
+        _conversations.update { list -> list.filter { it.id != id } }
+        _chatMessages.update { list -> list.filter { it.conversationId != id } }
+    }
+
+    override fun updateChatMessageSdui(id: String, sduiJson: String?) {
+        _chatMessages.update { list ->
+            list.map { if (it.id == id) it.copy(sduiJson = sduiJson) else it }
+        }
+    }
 
     override fun insertChatMessage(message: com.jesusdmedinac.bubble.data.model.ChatMessage) {
         _chatMessages.update { it + message }
