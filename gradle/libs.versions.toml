@@ -48,6 +48,7 @@ androidx-appfunctions = { module = "androidx.appfunctions:appfunctions", version
 androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-compiler", version.ref = "appfunctions" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
+sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
 json-to-compose = { module = "com.jesusdmedinac:json-to-compose", version.ref = "json-to-compose" }
 

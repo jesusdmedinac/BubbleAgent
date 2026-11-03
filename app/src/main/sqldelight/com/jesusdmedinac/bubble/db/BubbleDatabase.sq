@@ -38,10 +38,10 @@ DELETE FROM ConversationEntity;
 
 CREATE TABLE ChatMessageEntity (
     id TEXT NOT NULL PRIMARY KEY,
-    conversationId TEXT NOT NULL,
     sender TEXT NOT NULL,
     text TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
+    conversationId TEXT NOT NULL DEFAULT '',
     sduiJson TEXT
 );
 

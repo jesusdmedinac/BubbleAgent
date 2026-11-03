@@ -1,0 +1,11 @@
+-- Version 1 -> 2: multiple conversations and server-driven UI cards in chat messages.
+CREATE TABLE ConversationEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+ALTER TABLE ChatMessageEntity ADD COLUMN conversationId TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE ChatMessageEntity ADD COLUMN sduiJson TEXT;

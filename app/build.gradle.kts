@@ -75,6 +75,8 @@ sqldelight {
   databases {
     create("BubbleDatabase") {
       packageName.set("com.jesusdmedinac.bubble.db")
+      schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
+      verifyMigrations.set(true)
     }
   }
 }
@@ -107,6 +109,7 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.sqldelight.sqlite.driver)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)

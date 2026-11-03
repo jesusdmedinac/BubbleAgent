@@ -1,7 +1,7 @@
 package com.jesusdmedinac.bubble
 
 import android.app.Application
-import androidx.sqlite.db.SupportSQLiteDatabase
+import android.database.sqlite.SQLiteDatabase
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
 import com.jesusdmedinac.bubble.data.repository.BubbleRepositoryImpl
@@ -14,19 +14,8 @@ class AppContainer(application: Application) {
     }
 
     val database: BubbleDatabase by lazy {
-        val callback = object : AndroidSqliteDriver.Callback(BubbleDatabase.Schema) {
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-                db.execSQL("CREATE TABLE IF NOT EXISTS ConversationEntity (id TEXT NOT NULL PRIMARY KEY, title TEXT NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
-                try {
-                    db.execSQL("ALTER TABLE ChatMessageEntity ADD COLUMN conversationId TEXT NOT NULL DEFAULT ''")
-                } catch (_: Exception) {}
-                try {
-                    db.execSQL("ALTER TABLE ChatMessageEntity ADD COLUMN sduiJson TEXT")
-                } catch (_: Exception) {}
-            }
-        }
-        val driver = AndroidSqliteDriver(BubbleDatabase.Schema, application, "bubble.db", callback = callback)
+        markHandPatchedDatabaseAsMigrated(application)
+        val driver = AndroidSqliteDriver(BubbleDatabase.Schema, application, DATABASE_NAME)
         BubbleDatabase(driver)
     }
 
@@ -35,6 +24,29 @@ class AppContainer(application: Application) {
             screenTimeTracker = screenTimeTracker,
             database = database
         )
+    }
+}
+
+private const val DATABASE_NAME = "bubble.db"
+
+/**
+ * Builds made before migrations/1.sqm patched the version 1 schema by hand every time the
+ * database opened, so those databases already have the version 2 tables and columns while
+ * still reporting version 1. Marking them as version 2 stops the migration from adding the
+ * same columns again.
+ */
+private fun markHandPatchedDatabaseAsMigrated(application: Application) {
+    val file = application.getDatabasePath(DATABASE_NAME)
+    if (!file.exists()) return
+    SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use { db ->
+        if (db.version != 1) return
+        val messageColumns = db.rawQuery("PRAGMA table_info(ChatMessageEntity)", null).use { cursor ->
+            val nameIndex = cursor.getColumnIndexOrThrow("name")
+            buildSet { while (cursor.moveToNext()) add(cursor.getString(nameIndex)) }
+        }
+        if ("conversationId" in messageColumns && "sduiJson" in messageColumns) {
+            db.version = 2
+        }
     }
 }
 
