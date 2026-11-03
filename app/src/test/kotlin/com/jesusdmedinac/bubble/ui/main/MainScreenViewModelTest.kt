@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.main
 
+import com.jesusdmedinac.bubble.data.tracker.FakeScreenTimeSource
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
 import com.jesusdmedinac.bubble.core.currentTimeMillis
 import com.jesusdmedinac.bubble.data.model.ChatMessage
@@ -152,7 +153,8 @@ class MainScreenViewModelTest {
     private fun createViewModel(): MainScreenViewModel {
         return MainScreenViewModel(
             aiEngine = ImmediateAiEngine(),
-            repository = FakeBubbleRepository()
+            repository = FakeBubbleRepository(),
+            screenTimeSource = FakeScreenTimeSource()
         )
     }
 
@@ -260,7 +262,8 @@ class MainScreenViewModelTest {
         val repo = FakeBubbleRepository()
         val viewModel = MainScreenViewModel(
             aiEngine = ImmediateAiEngine(),
-            repository = repo
+            repository = repo,
+            screenTimeSource = FakeScreenTimeSource()
         )
         viewModel.onInputTextChanged("Quiero aprender guitarra acústica hoy")
         viewModel.onSendMessage()

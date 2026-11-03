@@ -12,7 +12,7 @@ import com.jesusdmedinac.bubble.data.model.RecommendedActivity
 import com.jesusdmedinac.bubble.data.model.StoreAppItem
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
-import com.jesusdmedinac.bubble.data.tracker.ScreenTimeTracker
+import com.jesusdmedinac.bubble.data.tracker.ScreenTimeSource
 import com.jesusdmedinac.bubble.db.BubbleDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +65,7 @@ interface BubbleRepository {
 }
 
 class BubbleRepositoryImpl(
-    private val screenTimeTracker: ScreenTimeTracker,
+    private val screenTimeSource: ScreenTimeSource,
     private val database: BubbleDatabase? = null,
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : BubbleRepository {
@@ -74,7 +74,7 @@ class BubbleRepositoryImpl(
     override val offlineProfile: StateFlow<OfflineProfile> = _offlineProfile.asStateFlow()
 
     private val _digitalHealthSnapshot = MutableStateFlow(
-        screenTimeTracker.getTodaySnapshot(_offlineProfile.value.interests)
+        screenTimeSource.getTodaySnapshot(_offlineProfile.value.interests)
     )
     override val digitalHealthSnapshot: StateFlow<DigitalHealthSnapshot> =
         _digitalHealthSnapshot.asStateFlow()
@@ -434,7 +434,7 @@ class BubbleRepositoryImpl(
 
     override fun refreshSnapshot() {
         _digitalHealthSnapshot.value =
-            screenTimeTracker.getTodaySnapshot(_offlineProfile.value.interests)
+            screenTimeSource.getTodaySnapshot(_offlineProfile.value.interests)
     }
 
     private val _storeApps = MutableStateFlow<List<StoreAppItem>>(

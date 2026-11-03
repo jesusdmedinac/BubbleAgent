@@ -3,13 +3,15 @@ package com.jesusdmedinac.bubble
 import android.app.Application
 import android.database.sqlite.SQLiteDatabase
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import com.jesusdmedinac.bubble.ai.BubbleAiEngine
+import com.jesusdmedinac.bubble.ai.KoogGeminiNanoAiEngine
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
 import com.jesusdmedinac.bubble.data.repository.BubbleRepositoryImpl
 import com.jesusdmedinac.bubble.data.tracker.ScreenTimeTracker
 import com.jesusdmedinac.bubble.db.BubbleDatabase
 
-class AppContainer(application: Application) {
-    val screenTimeTracker: ScreenTimeTracker by lazy {
+class AppContainer(private val application: Application) : AppGraph {
+    override val screenTimeSource: ScreenTimeTracker by lazy {
         ScreenTimeTracker(application)
     }
 
@@ -19,12 +21,14 @@ class AppContainer(application: Application) {
         BubbleDatabase(driver)
     }
 
-    val bubbleRepository: BubbleRepository by lazy {
+    override val bubbleRepository: BubbleRepository by lazy {
         BubbleRepositoryImpl(
-            screenTimeTracker = screenTimeTracker,
+            screenTimeSource = screenTimeSource,
             database = database
         )
     }
+
+    override fun createAiEngine(): BubbleAiEngine = KoogGeminiNanoAiEngine(application)
 }
 
 private const val DATABASE_NAME = "bubble.db"

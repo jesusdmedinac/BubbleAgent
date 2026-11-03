@@ -1,11 +1,8 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesusdmedinac.bubble.BubbleApplication
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
-import com.jesusdmedinac.bubble.ai.MockAiEngine
 import com.jesusdmedinac.bubble.ai.vault.VaultMemoryDetector
 import com.jesusdmedinac.bubble.core.randomId
 import com.jesusdmedinac.bubble.data.model.ChatMessage
@@ -17,6 +14,7 @@ import com.jesusdmedinac.bubble.data.model.RecommendedActivity
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
+import com.jesusdmedinac.bubble.data.tracker.ScreenTimeSource
 import com.jesusdmedinac.bubble.ui.main.sdui.BubbleSduiTemplates
 import com.jesusdmedinac.jsontocompose.model.ComposeAction
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,8 +41,9 @@ data class ChatUiState(
 )
 
 class MainScreenViewModel(
-    private val aiEngine: BubbleAiEngine = MockAiEngine(),
-    private val repository: BubbleRepository = BubbleApplication.instance.appContainer.bubbleRepository
+    private val aiEngine: BubbleAiEngine,
+    private val repository: BubbleRepository,
+    private val screenTimeSource: ScreenTimeSource,
 ) : ViewModel() {
 
     private val _currentConversationId = MutableStateFlow("")
@@ -144,13 +143,8 @@ class MainScreenViewModel(
         repository.refreshSnapshot()
     }
 
-    fun onOpenUsageSettings(context: Context) {
-        try {
-            val intent = BubbleApplication.instance.appContainer.screenTimeTracker.createSettingsIntent()
-            context.startActivity(intent)
-        } catch (_: Exception) {
-            // Handled gracefully
-        }
+    fun onOpenUsageSettings() {
+        screenTimeSource.openUsageAccessSettings()
     }
 
     fun simulateGeminiMcpInvocation() {

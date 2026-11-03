@@ -7,11 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Process
 import android.provider.Settings
+import com.jesusdmedinac.bubble.core.currentTimeMillis
 import com.jesusdmedinac.bubble.data.model.AppUsageStat
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import java.util.Calendar
 
-class ScreenTimeTracker(private val context: Context) {
+class ScreenTimeTracker(private val context: Context) : ScreenTimeSource {
 
     private val ignoredPackages = setOf(
         "android",
@@ -25,7 +26,7 @@ class ScreenTimeTracker(private val context: Context) {
         "com.samsung.android.settings"
     )
 
-    fun hasUsageStatsPermission(): Boolean {
+    override fun hasUsagePermission(): Boolean {
         val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as? AppOpsManager
             ?: return false
         val mode = appOps.unsafeCheckOpNoThrow(
@@ -36,21 +37,26 @@ class ScreenTimeTracker(private val context: Context) {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
-    fun createSettingsIntent(): Intent {
-        return Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+    override fun openUsageAccessSettings() {
+        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            // Some devices have no usage access screen; the demo data stays visible.
         }
     }
 
-    fun getTodaySnapshot(offlineInterests: List<String>): DigitalHealthSnapshot {
-        val isGranted = hasUsageStatsPermission()
+    override fun getTodaySnapshot(offlineInterests: List<String>): DigitalHealthSnapshot {
+        val isGranted = hasUsagePermission()
         if (!isGranted) {
-            return getFallbackDemoSnapshot(offlineInterests)
+            return demoScreenTimeSnapshot(offlineInterests)
         }
 
         return try {
             val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
-                ?: return getFallbackDemoSnapshot(offlineInterests)
+                ?: return demoScreenTimeSnapshot(offlineInterests)
 
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 0)
@@ -59,7 +65,7 @@ class ScreenTimeTracker(private val context: Context) {
                 set(Calendar.MILLISECOND, 0)
             }
             val startTime = calendar.timeInMillis
-            val endTime = System.currentTimeMillis()
+            val endTime = currentTimeMillis()
 
             val aggregatedMap = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
             val statsList: Collection<UsageStats> = if (!aggregatedMap.isNullOrEmpty()) {
@@ -120,22 +126,7 @@ class ScreenTimeTracker(private val context: Context) {
                 offlineInterests = offlineInterests
             )
         } catch (e: Exception) {
-            getFallbackDemoSnapshot(offlineInterests)
+            demoScreenTimeSnapshot(offlineInterests)
         }
-    }
-
-    private fun getFallbackDemoSnapshot(offlineInterests: List<String>): DigitalHealthSnapshot {
-        return DigitalHealthSnapshot(
-            totalScreenTimeMinutes = 255L, // 4h 15m
-            potentialRecoverableMinutes = 120L, // 2h 00m
-            topApps = listOf(
-                AppUsageStat("Instagram", "com.instagram.android", 105L),
-                AppUsageStat("TikTok", "com.zhiliaoapp.musically", 70L),
-                AppUsageStat("X / Twitter", "com.twitter.android", 50L),
-                AppUsageStat("YouTube", "com.google.android.youtube", 30L)
-            ),
-            isPermissionGranted = false,
-            offlineInterests = offlineInterests
-        )
     }
 }

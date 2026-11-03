@@ -1,6 +1,5 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -33,15 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.jesusdmedinac.bubble.ai.KoogGeminiNanoAiEngine
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
@@ -52,27 +47,15 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     modifier: Modifier = Modifier,
     onProfileClick: () -> Unit = {},
-    context: Context = LocalContext.current.applicationContext,
-    viewModel: MainScreenViewModel = viewModel {
-        MainScreenViewModel(KoogGeminiNanoAiEngine(context))
-    }
+    viewModel: MainScreenViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val healthSnapshot by viewModel.digitalHealthSnapshot.collectAsStateWithLifecycle()
     val activities by viewModel.recommendedActivities.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
-    val lifecycleOwner = LocalLifecycleOwner.current
 
-    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.onRefreshUsageStats()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onRefreshUsageStats()
     }
 
     var isDrawerOpen by remember { mutableStateOf(false) }
@@ -149,7 +132,7 @@ fun MainScreen(
             },
             onSettingsClick = {
                 isDrawerOpen = false
-                viewModel.onOpenUsageSettings(context)
+                viewModel.onOpenUsageSettings()
             },
             userName = uiState.userName,
             userPlan = "Pro Account",
@@ -201,7 +184,7 @@ fun MainScreen(
                         snackbarHostState.showSnackbar("Audio en vivo disponible próximamente con Android AICore Live")
                     }
                 },
-                onOpenSettingsClick = { viewModel.onOpenUsageSettings(context) },
+                onOpenSettingsClick = { viewModel.onOpenUsageSettings() },
                 onToggleActivity = viewModel::onToggleActivityCompleted,
                 onSimulateMcpClick = viewModel::simulateGeminiMcpInvocation,
                 onCustomAction = viewModel::onCustomAction,

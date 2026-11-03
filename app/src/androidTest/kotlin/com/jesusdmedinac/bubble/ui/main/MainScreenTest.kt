@@ -3,6 +3,8 @@ package com.jesusdmedinac.bubble.ui.main
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.jesusdmedinac.bubble.BubbleApplication
+import com.jesusdmedinac.bubble.ai.MockAiEngine
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -14,7 +16,16 @@ class MainScreenTest {
 
     @Before
     fun setup() {
-        composeTestRule.setContent { MainScreen() }
+        val appContainer = (composeTestRule.activity.application as BubbleApplication).appContainer
+        composeTestRule.setContent {
+            MainScreen(
+                viewModel = MainScreenViewModel(
+                    aiEngine = MockAiEngine(),
+                    repository = appContainer.bubbleRepository,
+                    screenTimeSource = appContainer.screenTimeSource
+                )
+            )
+        }
     }
 
     @Test

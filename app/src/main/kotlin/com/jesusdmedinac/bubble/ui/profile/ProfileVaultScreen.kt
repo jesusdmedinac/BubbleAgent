@@ -2,16 +2,12 @@ package com.jesusdmedinac.bubble.ui.profile
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
@@ -20,22 +16,12 @@ import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 fun ProfileVaultScreen(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ProfileVaultViewModel = viewModel()
+    viewModel: ProfileVaultViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refreshPermissionAndStats()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshPermissionAndStats()
     }
 
     BackHandler(onBack = onClose)
@@ -44,7 +30,7 @@ fun ProfileVaultScreen(
         uiState = uiState,
         onClose = onClose,
         onCategorySelected = viewModel::onCategorySelected,
-        onOpenSettingsClick = { viewModel.openUsageSettings(context) },
+        onOpenSettingsClick = { viewModel.openUsageSettings() },
         modifier = modifier
     )
 }

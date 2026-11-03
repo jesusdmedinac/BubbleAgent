@@ -1,14 +1,13 @@
 package com.jesusdmedinac.bubble.ui.profile
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jesusdmedinac.bubble.BubbleApplication
 import com.jesusdmedinac.bubble.data.model.AppUsageStat
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
+import com.jesusdmedinac.bubble.data.tracker.ScreenTimeSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +30,8 @@ data class ProfileVaultUiState(
 )
 
 class ProfileVaultViewModel(
-    private val repository: BubbleRepository = BubbleApplication.instance.appContainer.bubbleRepository
+    private val repository: BubbleRepository,
+    private val screenTimeSource: ScreenTimeSource,
 ) : ViewModel() {
 
     private val _selectedCategory = MutableStateFlow(VaultCategory.ALL)
@@ -110,12 +110,7 @@ class ProfileVaultViewModel(
         repository.refreshSnapshot()
     }
 
-    fun openUsageSettings(context: Context) {
-        try {
-            val intent = BubbleApplication.instance.appContainer.screenTimeTracker.createSettingsIntent()
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            // Handled gracefully
-        }
+    fun openUsageSettings() {
+        screenTimeSource.openUsageAccessSettings()
     }
 }

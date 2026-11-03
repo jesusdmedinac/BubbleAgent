@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.profile
 
+import com.jesusdmedinac.bubble.data.tracker.FakeScreenTimeSource
 import com.jesusdmedinac.bubble.core.currentTimeMillis
 import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
@@ -166,7 +167,7 @@ class ProfileVaultViewModelTest {
     @Test
     fun initialState_loadsScreenTimeAndMemories() = runTest {
         val repository = FakeProfileBubbleRepository()
-        val viewModel = ProfileVaultViewModel(repository)
+        val viewModel = ProfileVaultViewModel(repository, FakeScreenTimeSource())
 
         val state = viewModel.uiState.first { it.displayedMemories.isNotEmpty() }
 
@@ -180,7 +181,7 @@ class ProfileVaultViewModelTest {
     @Test
     fun filterByCategory_updatesDisplayedMemories() = runTest {
         val repository = FakeProfileBubbleRepository()
-        val viewModel = ProfileVaultViewModel(repository)
+        val viewModel = ProfileVaultViewModel(repository, FakeScreenTimeSource())
 
         viewModel.onCategorySelected(VaultCategory.OFFLINE_GOAL)
 
@@ -200,7 +201,7 @@ class ProfileVaultViewModelTest {
                 isPermissionGranted = false
             )
         )
-        val viewModel = ProfileVaultViewModel(repository)
+        val viewModel = ProfileVaultViewModel(repository, FakeScreenTimeSource())
 
         val state = viewModel.uiState.first { it.displayedMemories.isNotEmpty() && !it.isUsagePermissionGranted }
 
@@ -213,7 +214,7 @@ class ProfileVaultViewModelTest {
     @Test
     fun refreshPermissionAndStats_triggersRepositoryRefresh() = runTest {
         val repository = FakeProfileBubbleRepository()
-        val viewModel = ProfileVaultViewModel(repository)
+        val viewModel = ProfileVaultViewModel(repository, FakeScreenTimeSource())
 
         viewModel.refreshPermissionAndStats()
 

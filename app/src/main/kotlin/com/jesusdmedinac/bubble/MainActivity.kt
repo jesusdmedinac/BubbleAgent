@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
-                ) { MainNavigation() }
+                ) { MainNavigation(appGraph = (application as BubbleApplication).appContainer) }
             }
         }
     }
