@@ -36,7 +36,7 @@ Estado de partida (2026-11-03, `kmp describe`): Gradle, Kotlin 2.3.20, AGP 9.1.0
 - `androidx.compose.*` (BOM) → plugin `org.jetbrains.compose` + `compose.material3`, `compose.ui`, `compose.components.resources`.
 - `material-icons-extended` → el equivalente de Compose Multiplatform. Revisar su estado de mantenimiento al momento de migrar; si está deprecado, usar íconos en `composeResources`.
 - `lifecycle-viewmodel-compose` / `lifecycle-runtime-compose` → `org.jetbrains.androidx.lifecycle:*`.
-- `navigation3-runtime` / `navigation3-ui` → los artefactos de Navigation 3 para Compose Multiplatform (`org.jetbrains.androidx.navigation3:*`). **Verificar** su versión y estabilidad antes de comprometerse; si no están listos, dejar `Navigation.kt` en `androidMain` y usar un enrutador propio en iOS.
+- `navigation3-ui` → `org.jetbrains.androidx.navigation3:navigation3-ui`. Compose Multiplatform lo soporta en todas las plataformas desde la 1.10 (la documentación oficial menciona la 1.1.1). Solo `navigation3-ui` tiene versión de JetBrains; `navigation3-common` llega como dependencia transitiva. En iOS no hay serialización por reflexión, así que `rememberNavBackStack` debe usar la variante con `SavedStateConfiguration` y registrar `Main` y `ProfileVault` en un `SerializersModule`.
 - `@Preview` de AndroidX → previews de Compose Multiplatform o dejar las previews en `androidMain`.
 
 ### Se queda en `androidMain` detrás de una interfaz común
@@ -72,31 +72,43 @@ BubbleAgent/
 └── iosApp/          # proyecto Xcode que consume el framework de :shared
 ```
 
-Con AGP 9, el plugin `org.jetbrains.kotlin.multiplatform` ya no se combina con `com.android.application` en el mismo módulo. Por eso el código compartido vive en `:shared` (plugin `com.android.kotlin.multiplatform.library`) y la app Android en su propio módulo. El skill `agp-9-upgrade` no cubre proyectos KMP; para esto conviene consultar la documentación oficial de AGP 9 y de KMP.
+Con AGP 9, el plugin `org.jetbrains.kotlin.multiplatform` ya no se combina con `com.android.application` en el mismo módulo. Por eso el código compartido vive en `:shared` (plugin `com.android.kotlin.multiplatform.library`) y la app Android en su propio módulo. El skill `agp-9-upgrade` no cubre proyectos KMP; las guías que aplican son las de JetBrains en la base de conocimiento de `android docs` (ver sección 5).
+
+Reglas confirmadas en esa documentación:
+- **Los namespaces deben ser distintos**: `:androidApp` conserva `com.jesusdmedinac.bubble` y `:shared` usa `com.jesusdmedinac.bubble.shared`. Si coinciden, hay clases `R` duplicadas. Los paquetes de Kotlin pueden seguir siendo `com.jesusdmedinac.bubble.*`.
+- `:shared` no lleva `applicationId`, `versionCode`, `targetSdk`, `buildTypes` ni flavors. El plugin KMP de Android produce una sola variante.
+- `:androidApp` no debe aplicar `org.jetbrains.kotlin.android`: AGP 9 ya trae Kotlin integrado.
+- Versiones mínimas: Gradle 9.1, JDK 17, Build Tools 36, KSP 2.3.1+ (Bubble usa 2.3.12) y Compose Multiplatform 1.9.3+ (recomendada 1.10+).
+- Android Studio Otter 3 o posterior. IntelliJ IDEA no soporta AGP 9 con Android.
+- La tabla de compatibilidad marca API 36.1 como máximo para AGP 9.0. Bubble usa `compileSdk = 37` con AGP 9.1, y hoy compila como app; hay que confirmar que el plugin KMP de Android también lo acepte.
+- Dos archivos usan `com.jesusdmedinac.bubble.R`. Al mover sus composables a `commonMain`, esos recursos pasan a `composeResources` (`Res.drawable` / `Res.string`).
 
 `applicationId`, `namespace` de la app, keystore, `proguard-rules.pro`, `data_extraction_rules.xml`, `backup_rules.xml` y `bubble_app_function_service.xml` se mueven tal cual a `:androidApp`, para que Play vea la misma app.
 
 ### 2.1 Estilo por plataforma: Material 3 Expressive en Android, Liquid Glass en iOS
 
-Liquid Glass real solo existe en los componentes nativos de iOS 26 (`glassEffect`, `GlassEffectContainer` en SwiftUI, `UIGlassEffect` en UIKit). Compose no lo puede dibujar: a lo más imitaría un desenfoque, y se notaría. compose-calculator ya lo resolvió en SwiftUI (`iosApp/CalculatorGlassView.swift`: `GlassEffectContainer` + `.glassEffect(.regular.tint(...).interactive(), in: .circle)`, deployment target 26.6), así que ese archivo sirve de referencia.
+Liquid Glass real solo lo dibuja el sistema en componentes nativos de iOS 26. Compose no lo puede reproducir. La guía oficial de JetBrains ("Liquid Glass in a Compose Multiplatform app", `kb://JetBrains/kotlin-multiplatform-dev-docs/topics/ios-liquid-glass`, con la app de KotlinConf como ejemplo, rama `lg-nav`) resuelve exactamente este caso, y el plan la sigue:
 
-Por eso Bubble se divide en dos capas:
+- **SwiftUI es dueño de la navegación y de los controles del sistema**: `NavigationStack`, barra de navegación, toolbar y, si algún día hay pestañas, `TabView`. Al usarlos, iOS aplica Liquid Glass solo, sin código especial.
+- **Compose dibuja el contenido de cada pantalla**. Cada destino (`Main`, `ProfileVault`) se muestra en su propio `UIViewController` creado desde Kotlin.
+- **La navegación pasa por Swift**: cuando Compose quiere navegar (por ejemplo, abrir el Vault), avisa por un callback `onNavigate`. El coordinador de Swift empuja la ruta en su `NavigationStack`. En iOS, Compose deja de manejar el back stack.
+- **Compose oculta su propia barra superior en iOS**, para no duplicar títulos ni botones de regreso. En Android no cambia nada.
+- **Las rutas llevan su título** (`title` en cada `NavKey`), para que SwiftUI lo muestre sin preguntarle a Kotlin.
 
-| Capa | Qué incluye | Android | iOS |
-|---|---|---|---|
-| **Contenido** (compartido, Compose) | mensajes del chat, `DigitalHealthCard`, actividades recomendadas, donut de tiempo en pantalla, tarjetas del Vault, plantillas SDUI | Compose + tema M3 Expressive | el mismo Compose con un tema iOS: fuente del sistema (SF), colores y radios de las HIG, sin ripple, scroll con rebote |
-| **Controles** (por plataforma) | barra superior, `FloatingPromptBar` + botón de enviar/audio, menú lateral, bottom sheets, diálogos, botones flotantes | composables actuales de Material 3 | SwiftUI nativo con Liquid Glass: `NavigationStack`/toolbar, barra de prompt de vidrio, `.sheet`, `.alert`, menú como sidebar o sheet |
+| Capa | Android | iOS |
+|---|---|---|
+| Navegación y barras | Navigation 3 + `BubbleTopAppBar` (M3) | `NavigationStack` + toolbar de SwiftUI (Liquid Glass del sistema) |
+| Contenido de cada pantalla | Compose, tema M3 Expressive | el mismo Compose, con tema iOS (fuente del sistema, colores y radios de las HIG, sin ripple) |
+| Barra de prompt flotante | `FloatingPromptBar` (M3) | SwiftUI con `.glassEffect`, como `safeAreaInset` inferior; toma como referencia `CalculatorGlassView.swift` de compose-calculator |
+| Menú lateral, sheets, diálogos | composables actuales | `.sheet`, `.alert` y un menú nativo |
 
-Cómo se arma en iOS:
-- La raíz es SwiftUI. El contenido Compose entra como `ComposeUIViewController` dentro de un `UIViewControllerRepresentable`, **debajo**, y los controles de vidrio van **encima** en un `ZStack`. Así el vidrio refracta el contenido real que pasa por detrás, como en una app nativa.
-- El estado sale de los ViewModels compartidos. SwiftUI los observa con SKIE (`StateFlow` → `AsyncSequence`), siguiendo el skill `kotlin-interop-swift-coroutines`.
-- Las acciones de los controles (enviar prompt, abrir el Vault, adjuntar contexto) llaman a métodos del ViewModel compartido. No se duplica la lógica en Swift.
-- El contenido Compose deja espacio arriba y abajo para los controles (insets compartidos), para que nada quede tapado.
-- Deployment target **iOS 26**, igual que compose-calculator. Si se quisiera soportar iOS 17–25, el respaldo sería `.ultraThinMaterial`, pero no es Liquid Glass.
+El estado lo siguen dando los ViewModels compartidos. Lo que SwiftUI necesita observar directamente (texto del prompt, si está generando, título de la conversación) se expone con SKIE (skill `kotlin-interop-swift-coroutines`).
 
-En Android no cambia nada: los controles siguen siendo los composables actuales. En código común, cada control se declara como un slot (`topBar`, `promptBar`, `sheets`) que `:androidApp` llena con Material 3 y que en iOS se deja vacío porque lo pone SwiftUI.
+Deployment target **iOS 26**, con Xcode 26 o posterior.
 
-Riesgo a validar al inicio de la fase 4: que el vidrio de SwiftUI muestre bien el contenido Compose que pasa por detrás mientras se hace scroll, y que los gestos (scroll, tap en mensajes) lleguen a Compose a través de la capa de controles. Si falla, el plan B es pasar a SwiftUI también el contenido de la pantalla de chat.
+Alternativas que menciona la guía, por si el enfoque principal no funciona: navegación UIKit coordinada desde Kotlin con `expect`/`actual`; controles nativos incrustados en Compose (con limitaciones de interop); componentes adaptativos de terceros como Calf; o imitar el vidrio en Compose (AndroidLiquidGlass, Liquid), que se parece pero no es idéntico.
+
+Lo único fuera de la guía es la barra de prompt de vidrio encima del contenido Compose. Esa es la prueba técnica de la fase 4.0.
 
 ---
 
@@ -121,27 +133,27 @@ Cambios pequeños que dejan el código listo para moverse, y que se pueden proba
 
 ### Fase 2: Módulo `:shared` y separación de `:androidApp`
 - [ ] 2.1 Agregar al catálogo: `kotlin-multiplatform`, `org.jetbrains.compose`, `com.android.kotlin.multiplatform.library`, lifecycle y navigation3 de JetBrains, `sqldelight-native-driver`. Verificar cada versión antes de fijarla.
-- [ ] 2.2 Crear `:shared` con targets `androidLibrary`, `iosArm64` e `iosSimulatorArm64`.
-- [ ] 2.3 Renombrar `:app` a `:androidApp` y conservar `applicationId`, versionCode, firma y R8.
+- [ ] 2.2 Crear `:shared` con el plugin `com.android.kotlin.multiplatform.library` (bloque `kotlin { android { namespace = "com.jesusdmedinac.bubble.shared" } }`) y los targets `iosArm64` e `iosSimulatorArm64`, con framework estático `Shared`.
+- [ ] 2.3 Renombrar `:app` a `:androidApp` y conservar `applicationId`, namespace `com.jesusdmedinac.bubble`, versionCode, firma y R8. Mover ahí `MainActivity`, `BubbleApplication`, el manifest completo, los íconos del launcher y `proguard-rules.pro`.
 - [ ] 2.4 Mover `BubbleDatabase.sq` y las `.sqm` a `shared/src/commonMain/sqldelight` y crear `DriverFactory` (`expect`/`actual`).
 - [ ] 2.5 Mover modelos, repositorio, `VaultMemoryDetector`, `BubbleAiEngine` (interfaz + `MockAiEngine`) y `GeminiNanoKoogClient` a `commonMain`.
 - [ ] 2.6 Mover `BubbleAgentManager`, `BubbleKoogAgent`, `KoogGeminiNanoAiEngine` y `ScreenTimeTracker` a `shared/androidMain` o a `:androidApp`.
 - [ ] 2.7 `BubbleAppFunctionService` y su KSP se quedan en `:androidApp`.
 - [ ] 2.8 Mover los tests unitarios de modelos, repositorio y ViewModels a `commonTest`.
-- [ ] 2.9 Verificar: `./gradlew :androidApp:assembleDebug`, los tests y una prueba manual en el dispositivo (chat con Gemini Nano, Vault, tiempo en pantalla, AppFunctions por `adb`).
+- [ ] 2.9 Verificar: `./gradlew :androidApp:assembleDebug :shared:assemble`, los tests, `kmp describe`, `kmp doctor --architecture` y una prueba manual en el dispositivo con `android run` (chat con Gemini Nano, Vault, tiempo en pantalla, AppFunctions por `adb`).
 
 ### Fase 3: UI en Compose Multiplatform
-- [ ] 3.0 Separar contenido de controles (sección 2.1): `MainScreenContent` y `ProfileVaultContent` reciben slots `topBar`, `promptBar` y `sheets`, y un parámetro de insets. Android los llena con los composables actuales.
+- [ ] 3.0 Separar contenido de controles (sección 2.1): `MainScreenContent` y `ProfileVaultContent` reciben slots `topBar` y `promptBar`, y un parámetro de insets. Android los llena con los composables actuales; en iOS quedan vacíos porque los pone SwiftUI.
 - [ ] 3.1 Mover `ui/theme` y los composables sin dependencias Android a `commonMain`. Los textos y fuentes van a `composeResources`. Agregar un `BubbleTheme` con dos variantes: M3 Expressive (Android) e iOS (fuente del sistema, colores y radios de las HIG).
 - [ ] 3.2 Mover `MainScreenViewModel` y `ProfileVaultViewModel` a `commonMain` (lifecycle multiplataforma).
 - [ ] 3.3 `FloatingPromptBar` y `BubbleAssistantActionBar` reciben `SpeechInput` y `ShareSheet` inyectados; el portapapeles usa `LocalClipboard`.
-- [ ] 3.4 Navegación: Navigation 3 multiplataforma si está estable, o mantener `Navigation.kt` en Android y un enrutador simple en common.
+- [ ] 3.4 Navegación: mover `Navigation.kt` y `NavigationKeys.kt` a `commonMain` con `org.jetbrains.androidx.navigation3:navigation3-ui` y `SavedStateConfiguration` (serializadores polimórficos de `Main` y `ProfileVault`). Agregar `title` a cada ruta y un callback opcional `onNavigate` para iOS (sección 2.1).
 - [ ] 3.5 Revisar que las previews sigan funcionando en Android Studio.
 - [ ] 3.6 Verificar que la app Android se ve y funciona igual que la 1.2.0 (capturas comparativas).
 
 ### Fase 4: Target iOS
-- [ ] 4.0 Prueba técnica corta: una pantalla de chat de muestra con contenido Compose debajo y una barra de prompt SwiftUI con `.glassEffect` encima. Validar refracción durante el scroll, gestos y teclado. Decidir aquí si se sigue el plan A o el B (sección 2.1).
-- [ ] 4.1 Crear `iosApp` (Xcode, deployment target iOS 26) con raíz SwiftUI que incruste el contenido de `:shared` mediante `ComposeUIViewController`.
+- [ ] 4.0 Prueba técnica corta, siguiendo la guía de Liquid Glass (rama `lg-nav` de kotlinconf-app): `NavigationStack` de SwiftUI con la pantalla de chat en Compose, y la barra de prompt con `.glassEffect` como `safeAreaInset` inferior. Validar refracción durante el scroll, gestos y teclado. Si la barra de prompt no funciona bien, elegir una de las alternativas de la sección 2.1.
+- [ ] 4.1 Crear `iosApp` (Xcode 26, deployment target iOS 26) con raíz SwiftUI: un coordinador de `NavigationStack` y un `UIViewController` de Compose por destino, creado desde `iosMain`.
 - [ ] 4.1.1 Agregar SKIE a `:shared` para que SwiftUI observe los `StateFlow` de los ViewModels.
 - [ ] 4.1.2 Controles Liquid Glass en SwiftUI, tomando `CalculatorGlassView.swift` como referencia: barra superior, barra de prompt con botón de enviar/audio, menú lateral, sheets (adjuntar contexto, info del modelo local) y diálogo de seguridad del Vault.
 - [ ] 4.2 `actual` iOS: `NativeSqliteDriver`, `ScreenTimeSource` (modo demo, según D3), `SpeechInput` (Speech framework), `ShareSheet` (`UIActivityViewController`).
@@ -161,10 +173,39 @@ Cambios pequeños que dejan el código listo para moverse, y que se pueden proba
 | Riesgo | Mitigación |
 |---|---|
 | Perder datos de usuarios de Android al cambiar las migraciones | Fase 1.2 con prueba de actualización real antes de mover nada |
-| Navigation 3 o íconos sin versión multiplataforma estable | Mantenerlos en `androidMain` por ahora; no bloquean la fase 2 |
+| Íconos extendidos sin versión multiplataforma mantenida | Revisarlo en la fase 3 con `android docs`; si hace falta, copiar los íconos usados a `composeResources` |
+| `compileSdk = 37` fuera del máximo documentado para AGP 9.0 (36.1) | Confirmarlo al crear `:shared` en la fase 2; si falla, bajar `:shared` a 36 sin tocar `:androidApp` |
 | AppFunctions y KSP dentro de un proyecto KMP | Dejarlos en `:androidApp`, que sigue siendo un módulo Android puro |
 | iOS sin IA local equivalente ni métricas de pantalla | Interfaces comunes desde la fase 1; las decisiones D2 y D3 no bloquean Android |
 | Cambio de firma o de `applicationId` al reestructurar | Verificar el AAB contra la huella SHA-256 del keystore (script de compose-calculator) |
 
+## 5. Herramientas: qué usar y qué no (revisado el 2026-11-03)
+
+### `android` CLI (v1.1.16717390): la fuente principal para verificar
+| Comando | Uso en este plan |
+|---|---|
+| `android docs search` / `android docs fetch kb://...` | Documentación oficial actualizada, incluidas las guías de JetBrains para KMP. Se usa para confirmar APIs y versiones antes de fijarlas. Guías clave: `multiplatform-project-agp-9-migration`, `kotlin-tooling-agp9-migration/references/{VERSION-MATRIX,MIGRATION-APP-SPLIT,DSL-REFERENCE}`, `migrate-from-android`, `compose-navigation-3`, `ios-liquid-glass`, `compose-swiftui-integration`, `compose-ios-touch` |
+| `android describe` | Lista módulos, variantes y la ruta de cada APK. Al correrlo deja `.gradle/init.gradle.kts`, que ya está ignorado por git |
+| `android analyze <aab/apk>` | Lee package, versionName y versionCode del artefacto real. Reemplaza la lectura frágil del manifest que hace el script de compose-calculator (fases 0.2 y 5.1) |
+| `android preview list` / `render` | Renderiza los `@Preview` a PNG sin dispositivo. Sirve para comparar la UI antes y después de las fases 2 y 3 (no probado todavía en Bubble) |
+| `android run`, `layout`, `screen capture` | Probar la app en dispositivo al cerrar cada fase |
+| `android studio version-lookup` | Últimas versiones de artefactos Maven; necesita Android Studio abierto |
+
+El skill `agp-9-upgrade` de Android **no** aplica: dice explícitamente que no sirve para proyectos KMP.
+
+### `kmp` CLI (v0.1.0-SNAPSHOT): útil, con límites
+| Comando | Estado |
+|---|---|
+| `kmp doctor` | Funciona. Avisos actuales: `JAVA_HOME` sin definir, falta el plugin KMP en Android Studio, CocoaPods sin configurar (opcional) |
+| `kmp describe` | Funciona. Úsalo al cerrar la fase 2 para confirmar los módulos `shared` y `androidApp` y los targets iOS |
+| `kmp doctor --architecture` | Hoy pasa sin hallazgos, pero solo porque no existe `commonMain`. Se vuelve útil desde la fase 2, como revisión de que no entren imports `android.*` a `commonMain` |
+| `kmp analyze dependencies` | Funciona; lista bien las 30 librerías y 5 plugins |
+| `kmp analyze libraries` | **No sirve para verificar**. El skill documenta `--targets`, pero el binario solo acepta `--json` y `-p/--path`, y su catálogo es corto: no encuentra `navigation3`, `skie` ni `kermit`. Para versiones, usar `android docs` o `android studio version-lookup` |
+| `kmp migrate audit/plan/execute` | No aplica: solo audita proyectos React Native y Flutter. Sobre Bubble devuelve un 100/100 vacío |
+| `kmp skills add` | Instala en `.agents/skills/` o `~/.kmp/skills/`, no en `~/.claude/skills/`. Para Claude hay que copiar el skill a mano, como se hizo con los seis actuales |
+| `kmp mcp` | Servidor MCP por stdio con 9 herramientas; opcional |
+
+El catálogo de `kmp skills list` también incluye `kotlin-ui-sdui-compose` (json-to-compose en KMP). Bubble ya usa json-to-compose, así que vale la pena instalarlo para la fase 3.
+
 ## Skills de apoyo
-`kmp-cli` (`kmp doctor`, `kmp describe`, `kmp analyze`), `kotlin-data-sqldelight-database` (fase 1.2 y 2.4), `kmp-shared-core-bridge` (fase 2), `kotlin-ui-compose-adaptive` (fase 3), `kotlin-interop-swift-coroutines` (fase 4: SKIE para los controles SwiftUI con Liquid Glass).
+`kmp-cli` (`kmp doctor`, `kmp describe`, `kmp analyze dependencies`), `kotlin-data-sqldelight-database` (fase 1.2 y 2.4), `kmp-shared-core-bridge` (fase 2), `kotlin-ui-compose-adaptive` (fase 3), `kotlin-interop-swift-coroutines` (fase 4: SKIE para los controles SwiftUI con Liquid Glass).
