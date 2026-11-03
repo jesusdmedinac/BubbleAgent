@@ -122,14 +122,17 @@ Cada fase termina compilando y con `./gradlew testDebugUnitTest` en verde. La ap
 - [x] 0.3 Crear la rama `feature/kmp-migration`.
 - [ ] 0.4 Ambiente: `export JAVA_HOME=$(/usr/libexec/java_home)` en `~/.zshrc` y el plugin de Kotlin Multiplatform en Android Studio (avisos de `kmp doctor`).
 
-### Fase 1: Preparar el código dentro de `:app` (sin KMP todavía)
+### Fase 1: Preparar el código dentro de `:app` (sin KMP todavía) — terminada el 2026-11-03
 Cambios pequeños que dejan el código listo para moverse, y que se pueden probar con la app actual.
-- [ ] 1.1 `UUID` → `kotlin.uuid.Uuid` y `System.currentTimeMillis()` → `Clock.System.now().toEpochMilliseconds()` en modelos, VaultMemoryDetector y MainScreenViewModel.
-- [ ] 1.2 Convertir las migraciones manuales de `AppContainer.onOpen` en archivos `.sqm` (versiones 1→2→3) y activar `verifyMigrations`. Probar la actualización desde una instalación de la 1.2.0 con datos.
-- [ ] 1.3 Crear las interfaces `ScreenTimeSource`, `SpeechInput` y `ShareSheet`, y hacer que `ScreenTimeTracker`, el dictado y compartir las implementen.
-- [ ] 1.4 Quitar `Context` de los constructores de `MainScreenViewModel` y `ProfileVaultViewModel`: que reciban `BubbleRepository`, `BubbleAiEngine` y `ScreenTimeSource`.
-- [ ] 1.5 Sustituir `LifecycleEventObserver` manual por `LifecycleEventEffect` en `MainScreen` y `ProfileVaultScreen`.
-- [ ] 1.6 Reemplazar `android.util.Log` en código que se compartirá por un logger común mínimo (o Kermit, si se decide agregar la dependencia).
+- [x] 1.1 `UUID` y `System.currentTimeMillis()` → `randomId()` y `currentTimeMillis()` en `core/Time.kt` (Kotlin `Uuid` y `Clock`). Commit `3c69c24`.
+- [x] 1.2 Migración `migrations/1.sqm` con la instantánea `databases/1.db` y `verifyMigrations`. Las bases que ya tenían el parche manual (versión 1 con las columnas nuevas) se marcan como versión 2 al abrir. Prueba JVM `BubbleDatabaseMigrationTest`. Probado en el Galaxy S24 Ultra: una base parchada con 36 mensajes y 3 memorias quedó en versión 2 sin perder nada. Commit `4796a2b`.
+- [x] 1.3 Interfaces `ScreenTimeSource` (con `demoScreenTimeSnapshot`), `SpeechInput` y `ShareSheet`, más `plainTextClipEntry`. Las implementaciones Android están en `ScreenTimeTracker` y `ui/platform/PlatformActions.kt`. Commits `f2557a4` y `412df16`.
+- [x] 1.4 `AppGraph` común; `AppContainer` lo implementa y `Navigation.kt` crea los ViewModels desde él. Ningún ViewModel usa `Context` ni `BubbleApplication.instance`. Commit `f2557a4`.
+- [x] 1.5 `LifecycleEventEffect` en `MainScreen` y `ProfileVaultScreen`. Commit `f2557a4`.
+- [x] 1.6 No hizo falta: `android.util.Log` solo aparece en `BubbleAgentManager`, que se queda en Android.
+- Extra: `isGenerating` se marca antes de insertar los mensajes nuevos (causaba una prueba intermitente) y las pruebas de ViewModel usan un dispatcher de prueba. 19 pruebas, 5 corridas seguidas en verde. Commit `412df16`.
+
+Quedan con APIs de Android dentro de la UI, para la fase 3: `BackHandler` de `androidx.activity` en las dos pantallas, `com.jesusdmedinac.bubble.R` en dos archivos y los `@Preview` de AndroidX.
 
 ### Fase 2: Módulo `:shared` y separación de `:androidApp`
 - [ ] 2.1 Agregar al catálogo: `kotlin-multiplatform`, `org.jetbrains.compose`, `com.android.kotlin.multiplatform.library`, lifecycle y navigation3 de JetBrains, `sqldelight-native-driver`. Verificar cada versión antes de fijarla.
