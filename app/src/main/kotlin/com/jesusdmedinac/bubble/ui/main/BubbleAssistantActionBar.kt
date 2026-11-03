@@ -1,7 +1,5 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import android.content.ClipData
-import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -29,10 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jesusdmedinac.bubble.ui.platform.plainTextClipEntry
+import com.jesusdmedinac.bubble.ui.platform.rememberShareSheet
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 import com.jesusdmedinac.bubble.ui.theme.TextSecondary
@@ -60,7 +58,7 @@ fun BubbleAssistantActionBar(
 ) {
     val clipboard = LocalClipboard.current
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val shareSheet = rememberShareSheet()
     var isCopied by remember { mutableStateOf(false) }
     var likeState by remember { mutableStateOf<Boolean?>(null) }
 
@@ -74,8 +72,7 @@ fun BubbleAssistantActionBar(
     val handleCopy = {
         if (messageText.isNotEmpty()) {
             coroutineScope.launch {
-                val clipEntry = ClipData.newPlainText("Bubble", messageText).toClipEntry()
-                clipboard.setClipEntry(clipEntry)
+                clipboard.setClipEntry(plainTextClipEntry(messageText))
             }
         }
         isCopied = true
@@ -84,17 +81,7 @@ fun BubbleAssistantActionBar(
 
     val handleShare = {
         if (messageText.isNotEmpty()) {
-            try {
-                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                    putExtra(Intent.EXTRA_TEXT, messageText)
-                    type = "text/plain"
-                }
-                val shareIntent = Intent.createChooser(sendIntent, "Compartir respuesta")
-                shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(shareIntent)
-            } catch (_: Exception) {
-                // Handled gracefully
-            }
+            shareSheet.share(messageText)
         }
         onShare()
     }

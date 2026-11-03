@@ -1,6 +1,5 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import com.jesusdmedinac.bubble.data.tracker.FakeScreenTimeSource
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
 import com.jesusdmedinac.bubble.core.currentTimeMillis
 import com.jesusdmedinac.bubble.data.model.ChatMessage
@@ -12,8 +11,11 @@ import com.jesusdmedinac.bubble.data.model.RecommendedActivity
 import com.jesusdmedinac.bubble.data.model.StoreAppItem
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
+import com.jesusdmedinac.bubble.data.tracker.FakeScreenTimeSource
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +23,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class ImmediateAiEngine : BubbleAiEngine {
@@ -149,6 +156,19 @@ class FakeBubbleRepository : BubbleRepository {
 }
 
 class MainScreenViewModelTest {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Before
+    fun setUpMainDispatcher() {
+        // Run viewModelScope on the test thread so state updates arrive in order.
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @After
+    fun tearDownMainDispatcher() {
+        Dispatchers.resetMain()
+    }
 
     private fun createViewModel(): MainScreenViewModel {
         return MainScreenViewModel(

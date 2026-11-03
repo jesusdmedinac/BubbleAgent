@@ -178,6 +178,9 @@ class MainScreenViewModel(
         val query = _inputText.value.trim()
         if (query.isEmpty() || _isGenerating.value) return
 
+        // Mark generation before the new messages appear, so no state shows them as finished.
+        _isGenerating.value = true
+
         var activeConvId = _currentConversationId.value
         if (activeConvId.isEmpty()) {
             activeConvId = randomId()
@@ -209,7 +212,6 @@ class MainScreenViewModel(
         repository.insertChatMessage(initialAssistantMessage)
 
         _inputText.value = ""
-        _isGenerating.value = true
 
         viewModelScope.launch {
             var accumulated = ""
