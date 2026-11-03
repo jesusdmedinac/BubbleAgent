@@ -1,6 +1,6 @@
 package com.jesusdmedinac.bubble.data.model
 
-import java.util.UUID
+import com.jesusdmedinac.bubble.core.randomId
 
 enum class VaultCategory(val displayName: String) {
     ALL("Todas"),
@@ -14,7 +14,7 @@ enum class VaultCategory(val displayName: String) {
  * extracted automatically from user conversations or detected by the Android MCP Server.
  */
 data class VaultMemoryItem(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = randomId(),
     val tag: String,
     val category: VaultCategory,
     val title: String,

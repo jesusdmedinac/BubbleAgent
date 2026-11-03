@@ -1,13 +1,14 @@
 package com.jesusdmedinac.bubble.data.model
 
-import java.util.UUID
+import com.jesusdmedinac.bubble.core.currentTimeMillis
+import com.jesusdmedinac.bubble.core.randomId
 
 /**
  * Multi-turn conversation entity for grouping chat messages.
  */
 data class Conversation(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = randomId(),
     val title: String,
-    val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val createdAt: Long = currentTimeMillis(),
+    val updatedAt: Long = currentTimeMillis()
 )

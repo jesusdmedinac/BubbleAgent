@@ -1,10 +1,10 @@
 package com.jesusdmedinac.bubble.ai.vault
 
+import com.jesusdmedinac.bubble.core.randomId
 import com.jesusdmedinac.bubble.data.model.VaultCategory
-import java.util.UUID
 
 data class VaultMemoryCandidate(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = randomId(),
     val tag: String,
     val category: VaultCategory,
     val title: String,

@@ -2,6 +2,7 @@ package com.jesusdmedinac.bubble.data.repository
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.jesusdmedinac.bubble.core.currentTimeMillis
 import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
@@ -240,7 +241,7 @@ class BubbleRepositoryImpl(
                     timestampFormatted = item.timestampFormatted,
                     footerDetail = item.footerDetail,
                     tagColorHex = item.tagColorHex,
-                    createdAt = System.currentTimeMillis()
+                    createdAt = currentTimeMillis()
                 )
             }
         } else {
@@ -279,7 +280,7 @@ class BubbleRepositoryImpl(
                     estimatedMinutes = newActivity.estimatedMinutes.toLong(),
                     reason = newActivity.reason,
                     isCompleted = if (newActivity.isCompleted) 1L else 0L,
-                    createdAt = System.currentTimeMillis()
+                    createdAt = currentTimeMillis()
                 )
             }
         } else {
@@ -331,7 +332,7 @@ class BubbleRepositoryImpl(
     }
 
     override fun createOrUpdateConversation(id: String, title: String) {
-        val now = System.currentTimeMillis()
+        val now = currentTimeMillis()
         if (database != null) {
             coroutineScope.launch {
                 database.bubbleDatabaseQueries.insertConversation(
@@ -354,7 +355,7 @@ class BubbleRepositoryImpl(
     }
 
     override fun updateConversationTimestamp(id: String) {
-        val now = System.currentTimeMillis()
+        val now = currentTimeMillis()
         if (database != null) {
             coroutineScope.launch {
                 database.bubbleDatabaseQueries.updateConversationTimestamp(updatedAt = now, id = id)

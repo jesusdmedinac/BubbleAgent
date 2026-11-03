@@ -1,6 +1,7 @@
 package com.jesusdmedinac.bubble.ui.main
 
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
+import com.jesusdmedinac.bubble.core.currentTimeMillis
 import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
@@ -111,7 +112,7 @@ class FakeBubbleRepository : BubbleRepository {
         _conversations.update { list ->
             val existing = list.find { it.id == id }
             if (existing != null) {
-                list.map { if (it.id == id) it.copy(title = title, updatedAt = System.currentTimeMillis()) else it }
+                list.map { if (it.id == id) it.copy(title = title, updatedAt = currentTimeMillis()) else it }
             } else {
                 listOf(Conversation(id = id, title = title)) + list
             }
@@ -120,7 +121,7 @@ class FakeBubbleRepository : BubbleRepository {
 
     override fun updateConversationTimestamp(id: String) {
         _conversations.update { list ->
-            list.map { if (it.id == id) it.copy(updatedAt = System.currentTimeMillis()) else it }
+            list.map { if (it.id == id) it.copy(updatedAt = currentTimeMillis()) else it }
         }
     }
 

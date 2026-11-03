@@ -7,6 +7,7 @@ import com.jesusdmedinac.bubble.BubbleApplication
 import com.jesusdmedinac.bubble.ai.BubbleAiEngine
 import com.jesusdmedinac.bubble.ai.MockAiEngine
 import com.jesusdmedinac.bubble.ai.vault.VaultMemoryDetector
+import com.jesusdmedinac.bubble.core.randomId
 import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.Conversation
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
@@ -28,7 +29,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
-import java.util.UUID
 
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
@@ -127,7 +127,7 @@ class MainScreenViewModel(
     }
 
     fun onNewChatClicked() {
-        val newId = UUID.randomUUID().toString()
+        val newId = randomId()
         _currentConversationId.value = newId
         _inputText.value = ""
     }
@@ -186,7 +186,7 @@ class MainScreenViewModel(
 
         var activeConvId = _currentConversationId.value
         if (activeConvId.isEmpty()) {
-            activeConvId = UUID.randomUUID().toString()
+            activeConvId = randomId()
             _currentConversationId.value = activeConvId
         }
 
@@ -205,7 +205,7 @@ class MainScreenViewModel(
         )
         repository.insertChatMessage(userMessage)
 
-        val assistantMsgId = UUID.randomUUID().toString()
+        val assistantMsgId = randomId()
         val initialAssistantMessage = ChatMessage(
             id = assistantMsgId,
             conversationId = activeConvId,
@@ -281,7 +281,7 @@ class MainScreenViewModel(
                 }
 
                 val memoryItem = VaultMemoryItem(
-                    id = UUID.randomUUID().toString(),
+                    id = randomId(),
                     tag = tag,
                     category = category,
                     title = title,
