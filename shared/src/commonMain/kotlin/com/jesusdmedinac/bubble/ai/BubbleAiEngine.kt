@@ -19,7 +19,7 @@ class MockAiEngine : BubbleAiEngine {
             lower.contains("tiempo") || lower.contains("scroll") || lower.contains("pantalla") ->
                 "He notado que las tardes suelen ser el momento con mayor fricción y consumo pasivo. ¿Qué tal si dedicamos los próximos 30 minutos a tocar guitarra o caminar un rato?"
             lower.contains("hola") || lower.contains("hi") || lower.contains("hey") ->
-                "¡Hola Jesús! Estoy aquí en tu dispositivo de forma 100% privada y local vía Gemini Nano. ¿Qué actividad del mundo real te gustaría rescatar hoy en lugar de estar en pantalla?"
+                "¡Hola Jesús! Estoy aquí en tu dispositivo, de forma 100% privada y local. ¿Qué actividad del mundo real te gustaría rescatar hoy en lugar de estar en pantalla?"
             else ->
                 "Entendido. Como tu copiloto local de Bubble, mi misión es ayudarte a cambiar el scroll por experiencias reales. ¿Te gustaría agendar esta actividad en tus prioridades offline de hoy?"
         }

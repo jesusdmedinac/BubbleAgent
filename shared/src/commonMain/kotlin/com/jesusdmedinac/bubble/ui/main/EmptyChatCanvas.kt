@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.main
 
+import com.jesusdmedinac.bubble.ui.platformCopy
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -97,7 +98,7 @@ fun EmptyChatCanvas(
                 modifier = Modifier.size(12.dp)
             )
             Text(
-                text = "Gemini Nano On-Device • 100% Privado",
+                text = platformCopy.assistantBadge,
                 color = BubbleCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,

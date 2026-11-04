@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.profile
 
+import com.jesusdmedinac.bubble.ui.platformCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -139,8 +140,8 @@ fun ProfileVaultContent(
             }
 
             item {
-                // 6. Box / Android MCP Bridge
-                AndroidMcpBridgeBox()
+                // 6. Box / Android MCP Bridge (AppFunctions exist only on Android)
+                if (platformCopy.showsAssistantToolsBridge) AndroidMcpBridgeBox()
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.profile
 
+import com.jesusdmedinac.bubble.ui.platformCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -262,7 +263,7 @@ fun ScreenTimeCard(
                             fontFamily = FontFamily.SansSerif
                         )
                         Text(
-                            text = "Concede acceso a Bubble en Ajustes",
+                            text = platformCopy.screenTimeAccessHint,
                             color = AccentGold,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
@@ -272,37 +273,39 @@ fun ScreenTimeCard(
                 }
 
                 Text(
-                    text = "Permite a Bubble y a Gemini Nano medir tus horas reales y detectar picos de distracción en apps para sugerir desconexiones offline oportunas.",
+                    text = platformCopy.screenTimeAccessDescription,
                     color = TextSecondary,
                     fontSize = 11.sp,
                     lineHeight = 15.sp,
                     fontFamily = FontFamily.SansSerif
                 )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(AccentGold)
-                        .clickable { onOpenSettingsClick() }
-                        .padding(vertical = 9.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Settings,
-                        contentDescription = null,
-                        tint = Color(0xFF090A0D),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Text(
-                        text = "Activar en Ajustes de Android",
-                        color = Color(0xFF090A0D),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif
-                    )
+                platformCopy.screenTimeAccessAction?.let { action ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(AccentGold)
+                            .clickable { onOpenSettingsClick() }
+                            .padding(vertical = 9.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            contentDescription = null,
+                            tint = Color(0xFF090A0D),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text(
+                            text = action,
+                            color = Color(0xFF090A0D),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.SansSerif
+                        )
+                    }
                 }
 
                 Row(
@@ -316,7 +319,7 @@ fun ScreenTimeCard(
                         modifier = Modifier.size(10.dp)
                     )
                     Text(
-                        text = "100% privado en tu Snapdragon NPU. Cero telemetría externa.",
+                        text = platformCopy.screenTimePrivacyNote,
                         color = TextMuted,
                         fontSize = 9.sp,
                         fontFamily = FontFamily.SansSerif

@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.profile
 
+import com.jesusdmedinac.bubble.ui.platformCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -97,7 +98,7 @@ fun UserProfileCard(
                         modifier = Modifier.size(11.dp)
                     )
                     Text(
-                        text = "Gemini Nano • Snapdragon NPU",
+                        text = platformCopy.deviceEngine,
                         color = BubbleCyan,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,

@@ -1,5 +1,6 @@
 package com.jesusdmedinac.bubble.ui.profile
 
+import com.jesusdmedinac.bubble.ui.platformCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -85,7 +86,7 @@ fun BubbleVaultHeader(
                     modifier = Modifier.size(10.dp)
                 )
                 Text(
-                    text = "Android MCP Activo",
+                    text = platformCopy.vaultStatus,
                     color = StatusSuccess,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
@@ -95,7 +96,7 @@ fun BubbleVaultHeader(
         }
 
         Text(
-            text = "Conocimiento y hábitos guardados automáticamente en conversaciones y sensores MCP locales para dar memoria infinita y privada a Gemini Nano.",
+            text = platformCopy.vaultDescription,
             color = TextSecondary,
             fontSize = 11.sp,
             lineHeight = 15.sp,
@@ -110,7 +111,7 @@ fun BubbleVaultHeader(
             val chips = listOf(
                 VaultCategory.ALL to VaultCategory.ALL.displayName,
                 VaultCategory.OFFLINE_GOAL to VaultCategory.OFFLINE_GOAL.displayName,
-                VaultCategory.MCP_HABIT to VaultCategory.MCP_HABIT.displayName,
+                VaultCategory.MCP_HABIT to platformCopy.habitsFilter,
                 VaultCategory.PREFERENCE to VaultCategory.PREFERENCE.displayName
             )
 
