@@ -20,7 +20,7 @@ class BubbleDatabaseMigrationTest {
     @Before
     fun setUp() {
         databaseFile = File.createTempFile("bubble-v1", ".db")
-        File("src/main/sqldelight/databases/1.db").copyTo(databaseFile, overwrite = true)
+        File("src/commonMain/sqldelight/databases/1.db").copyTo(databaseFile, overwrite = true)
         driver = JdbcSqliteDriver("jdbc:sqlite:${databaseFile.path}")
     }
 

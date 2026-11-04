@@ -34,4 +34,5 @@ plugins {
 
 rootProject.name = "Bubble"
 
-include(":app")
+include(":androidApp")
+include(":shared")

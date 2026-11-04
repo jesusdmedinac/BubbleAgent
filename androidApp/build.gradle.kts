@@ -5,7 +5,6 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
-  alias(libs.plugins.sqldelight)
 }
 
 fun readEnvProperties(): Properties {
@@ -71,17 +70,10 @@ kotlin {
   jvmToolchain(17)
 }
 
-sqldelight {
-  databases {
-    create("BubbleDatabase") {
-      packageName.set("com.jesusdmedinac.bubble.db")
-      schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
-      verifyMigrations.set(true)
-    }
-  }
-}
 
 dependencies {
+  implementation(project(":shared"))
+
   val composeBom = platform(libs.androidx.compose.bom)
   implementation(composeBom)
   androidTestImplementation(composeBom)
@@ -109,7 +101,6 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation(libs.sqldelight.sqlite.driver)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)

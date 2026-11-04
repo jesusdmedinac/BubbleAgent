@@ -134,16 +134,16 @@ Cambios pequeños que dejan el código listo para moverse, y que se pueden proba
 
 Quedan con APIs de Android dentro de la UI, para la fase 3: `BackHandler` de `androidx.activity` en las dos pantallas, `com.jesusdmedinac.bubble.R` en dos archivos y los `@Preview` de AndroidX.
 
-### Fase 2: Módulo `:shared` y separación de `:androidApp`
-- [ ] 2.1 Agregar al catálogo: `kotlin-multiplatform`, `org.jetbrains.compose`, `com.android.kotlin.multiplatform.library`, lifecycle y navigation3 de JetBrains, `sqldelight-native-driver`. Verificar cada versión antes de fijarla.
-- [ ] 2.2 Crear `:shared` con el plugin `com.android.kotlin.multiplatform.library` (bloque `kotlin { android { namespace = "com.jesusdmedinac.bubble.shared" } }`) y los targets `iosArm64` e `iosSimulatorArm64`, con framework estático `Shared`.
-- [ ] 2.3 Renombrar `:app` a `:androidApp` y conservar `applicationId`, namespace `com.jesusdmedinac.bubble`, versionCode, firma y R8. Mover ahí `MainActivity`, `BubbleApplication`, el manifest completo, los íconos del launcher y `proguard-rules.pro`.
-- [ ] 2.4 Mover `BubbleDatabase.sq` y las `.sqm` a `shared/src/commonMain/sqldelight` y crear `DriverFactory` (`expect`/`actual`).
-- [ ] 2.5 Mover modelos, repositorio, `VaultMemoryDetector`, `BubbleAiEngine` (interfaz + `MockAiEngine`) y `GeminiNanoKoogClient` a `commonMain`.
-- [ ] 2.6 Mover `BubbleAgentManager`, `BubbleKoogAgent`, `KoogGeminiNanoAiEngine` y `ScreenTimeTracker` a `shared/androidMain` o a `:androidApp`.
-- [ ] 2.7 `BubbleAppFunctionService` y su KSP se quedan en `:androidApp`.
-- [ ] 2.8 Mover los tests unitarios de modelos, repositorio y ViewModels a `commonTest`.
-- [ ] 2.9 Verificar: `./gradlew :androidApp:assembleDebug :shared:assemble`, los tests, `kmp describe`, `kmp doctor --architecture` y una prueba manual en el dispositivo con `android run` (chat con Gemini Nano, Vault, tiempo en pantalla, AppFunctions por `adb`).
+### Fase 2: Módulo `:shared` y separación de `:androidApp` — terminada el 2026-11-03
+- [x] 2.1 Catálogo: plugins `kotlin-multiplatform` y `android-kotlin-multiplatform-library`, librerías `sqldelight-native-driver` y `kotlinx-coroutines-core`. Lifecycle y Navigation 3 de JetBrains se agregan en la fase 3, cuando se mueva la UI.
+- [x] 2.2 `:shared` con `com.android.kotlin.multiplatform.library` (namespace `com.jesusdmedinac.bubble.shared`, compileSdk 37 sin problemas) y targets `iosArm64` e `iosSimulatorArm64`. El framework de iOS se declara en la fase 4.
+- [x] 2.3 `:app` → `:androidApp` con el mismo `applicationId`, namespace, versión, firma y R8. El AAB de release sigue siendo `com.jesusdmedinac.bubble` 1.2.0 (19), firmado con el keystore de siempre.
+- [x] 2.4 `BubbleDatabase.sq`, `migrations/1.sqm` y `databases/1.db` en `shared/src/commonMain/sqldelight`. No hizo falta `expect`/`actual` todavía: Android crea su driver en `AppContainer` (que también marca las bases parchadas) y el driver nativo se agrega en la fase 4.
+- [x] 2.5 En `commonMain`: `AppGraph`, `core/Time.kt`, `data/model/*`, `BubbleRepository` (con `Dispatchers.IO` multiplataforma), `ScreenTimeSource`, `BubbleAiEngine` + `MockAiEngine` y `VaultMemoryDetector`. Se borró `DataRepository.kt`, que era código de plantilla sin uso.
+- [x] 2.6 Se quedan en `:androidApp`: `BubbleAgentManager`, `BubbleKoogAgent`, `KoogGeminiNanoAiEngine`, `ScreenTimeTracker` y también `GeminiNanoKoogClient`, que depende de `BubbleAgentManager` (el inventario original lo ponía en common por error).
+- [x] 2.7 `BubbleAppFunctionService` y su KSP siguen en `:androidApp`; el servicio aparece registrado en el teléfono.
+- [x] 2.8 `BubbleDatabaseMigrationTest` pasó a `shared/src/androidHostTest`. Las pruebas de ViewModel se mueven a `commonTest` junto con los ViewModels en la fase 3.
+- [x] 2.9 Verificado: `:shared` compila para Android, `iosArm64` e `iosSimulatorArm64`; `verifySqlDelightMigration` pasa; 19 pruebas en verde (17 en `:androidApp`, 2 en `:shared`); `assembleDebug`, `assembleDebugAndroidTest` y `bundleRelease` correctos. `kmp describe` ve los dos módulos y tres targets; `kmp doctor --architecture` solo avisa que falta el punto de entrada de iOS (fase 4). En el Galaxy S24 Ultra la app abre con sus 36 mensajes, 3 memorias y 3 conversaciones.
 
 ### Fase 3: UI en Compose Multiplatform
 - [ ] 3.0 Separar contenido de controles (sección 2.1): `MainScreenContent` y `ProfileVaultContent` reciben slots `topBar` y `promptBar`, y un parámetro de insets. Android los llena con los composables actuales; en iOS quedan vacíos porque los pone SwiftUI.
