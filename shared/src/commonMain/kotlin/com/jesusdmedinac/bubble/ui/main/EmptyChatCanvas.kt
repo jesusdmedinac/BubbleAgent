@@ -24,14 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesusdmedinac.bubble.R
+import com.jesusdmedinac.bubble.resources.Res
+import com.jesusdmedinac.bubble.resources.logo_bubble_phone
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan10
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan20
@@ -56,7 +57,7 @@ fun EmptyChatCanvas(
     ) {
         // Emblem
         Image(
-            painter = painterResource(id = R.drawable.logo_bubble_phone),
+            painter = painterResource(Res.drawable.logo_bubble_phone),
             contentDescription = "Bubble Logo",
             modifier = Modifier
                 .size(54.dp)

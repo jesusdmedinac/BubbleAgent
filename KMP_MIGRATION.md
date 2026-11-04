@@ -145,17 +145,24 @@ Quedan con APIs de Android dentro de la UI, para la fase 3: `BackHandler` de `an
 - [x] 2.8 `BubbleDatabaseMigrationTest` pasó a `shared/src/androidHostTest`. Las pruebas de ViewModel se mueven a `commonTest` junto con los ViewModels en la fase 3.
 - [x] 2.9 Verificado: `:shared` compila para Android, `iosArm64` e `iosSimulatorArm64`; `verifySqlDelightMigration` pasa; 19 pruebas en verde (17 en `:androidApp`, 2 en `:shared`); `assembleDebug`, `assembleDebugAndroidTest` y `bundleRelease` correctos. `kmp describe` ve los dos módulos y tres targets; `kmp doctor --architecture` solo avisa que falta el punto de entrada de iOS (fase 4). En el Galaxy S24 Ultra la app abre con sus 36 mensajes, 3 memorias y 3 conversaciones.
 
-### Fase 3: UI en Compose Multiplatform
-- [ ] 3.0 Separar contenido de controles (sección 2.1): `MainScreenContent` y `ProfileVaultContent` reciben slots `topBar` y `promptBar`, y un parámetro de insets. Android los llena con los composables actuales; en iOS quedan vacíos porque los pone SwiftUI.
-- [ ] 3.1 Mover `ui/theme` y los composables sin dependencias Android a `commonMain`. Los textos y fuentes van a `composeResources`. Agregar un `BubbleTheme` con dos variantes: M3 Expressive (Android) e iOS (fuente del sistema, colores y radios de las HIG).
-- [ ] 3.2 Mover `MainScreenViewModel` y `ProfileVaultViewModel` a `commonMain` (lifecycle multiplataforma).
-- [ ] 3.3 `FloatingPromptBar` y `BubbleAssistantActionBar` reciben `SpeechInput` y `ShareSheet` inyectados; el portapapeles usa `LocalClipboard`.
-- [ ] 3.4 Navegación: mover `Navigation.kt` y `NavigationKeys.kt` a `commonMain` con `org.jetbrains.androidx.navigation3:navigation3-ui` y `SavedStateConfiguration` (serializadores polimórficos de `Main` y `ProfileVault`). Agregar `title` a cada ruta y un callback opcional `onNavigate` para iOS (sección 2.1).
-- [ ] 3.5 Revisar que las previews sigan funcionando en Android Studio.
-- [ ] 3.6 Verificar que la app Android se ve y funciona igual que la 1.2.0 (capturas comparativas).
+### Fase 3: UI en Compose Multiplatform — terminada el 2026-11-03
+Versiones confirmadas en Maven Central y en las notas de release: Compose Multiplatform 1.10.3 (Jetpack Compose 1.10.5; la app usaba 1.10.6), Material3 1.10.0-alpha05 (la que acompaña a 1.10.3), íconos extendidos 1.7.3 (última versión publicada), Lifecycle 2.10.0, Navigation 3 1.1.1 y NavigationEvent 1.0.1.
+
+- [x] 3.1 `ui/theme`, `ui/main`, `ui/profile` y `sdui/BubbleSduiTemplates.kt` están en `commonMain`. El logo pasó a `composeResources/drawable` y se usa con `Res.drawable.logo_bubble_phone` (paquete `com.jesusdmedinac.bubble.resources`). No había textos en `strings.xml` aparte de `app_name`, así que no hubo más recursos que mover.
+- [x] 3.2 `MainScreenViewModel` y `ProfileVaultViewModel` en `commonMain` con el lifecycle de JetBrains. Sus pruebas y `FakeScreenTimeSource` pasaron a `shared/src/commonTest` con `kotlin.test`, así que también corren en el simulador de iOS.
+- [x] 3.3 `PlatformActions.kt` es `expect` en `commonMain`, con `actual` en `androidMain` (el código de siempre) y en `iosMain` (por ahora no hacen nada; el portapapeles ya funciona con `ClipEntry.withPlainText`).
+- [x] 3.4 `Navigation.kt` y `NavigationKeys.kt` en `commonMain` con `org.jetbrains.androidx.navigation3:navigation3-ui` y una `SavedStateConfiguration` que registra `Main` y `ProfileVault`. El `BackHandler` de androidx.activity se reemplazó: en `MainScreen` por `NavigationBackHandler` (cierra el menú lateral) y en `ProfileVaultScreen` se quitó porque `NavDisplay` ya hace lo mismo con `onBack`.
+- [x] 3.5 Las `@Preview` siguen en `commonMain` con la misma anotación (`androidx.compose.ui.tooling.preview.Preview`, multiplataforma desde CMP 1.10); `ui-tooling` va en `androidRuntimeClasspath` para que Android Studio las renderice.
+- [x] 3.6 Verificado en el Galaxy S24 Ultra: la pantalla principal queda idéntica a la captura previa; el menú lateral, atrás (cierra primero el menú y luego el Vault), conversación nueva con el logo y el Vault con uso real funcionan sin crashes. 19 pruebas en verde (15 en `:shared`, 4 en `:androidApp`); `assembleDebugAndroidTest`, `verifySqlDelightMigration` y `compileKotlinIosArm64` correctos. El AAB de release sigue siendo 1.2.0 (19) con la misma firma (SHA-256 `77:CF:…:C0:5C`). `kmp doctor --architecture` solo avisa de `MainViewController` (fase 4).
+- Hallazgos:
+  - Con `com.android.kotlin.multiplatform.library` hay que poner `androidResources.enable = true`; sin eso `composeResources` no entra al APK y la app se cae al abrir con `MissingResourceException`.
+  - `org.gradle.jvmargs` subió de 2 GB a 4 GB: D8 se quedaba sin memoria al compilar Android y Kotlin/Native en el mismo daemon.
+  - Las pruebas de `commonTest` compilan para iOS, pero `iosSimulatorArm64Test` no corre: Xcode 27 está instalado sin runtimes de iOS ni simuladores. Hay que instalarlos antes de la fase 4 (`xcodebuild -downloadPlatform iOS`).
+- Pasan a la fase 4: el 3.0 (slots `topBar`/`promptBar`), la variante iOS de `BubbleTheme` y el `title`/`onNavigate` de las rutas. Su forma depende de lo que diga la prueba técnica 4.0 (por ejemplo, si la barra de prompt queda en SwiftUI o en Compose), y hacerlos antes sería adivinar la API.
 
 ### Fase 4: Target iOS
 - [ ] 4.0 Prueba técnica corta, siguiendo la guía de Liquid Glass (rama `lg-nav` de kotlinconf-app): `NavigationStack` de SwiftUI con la pantalla de chat en Compose, y la barra de prompt con `.glassEffect` como `safeAreaInset` inferior. Validar refracción durante el scroll, gestos y teclado. Si la barra de prompt no funciona bien, elegir una de las alternativas de la sección 2.1.
+- [ ] 4.0.1 Con el resultado de 4.0: slots `topBar`/`promptBar` en `MainScreenContent` y `ProfileVaultContent`, `title` en cada ruta, callback `onNavigate` en `MainNavigation` y `BubbleTheme` para iOS (fuente del sistema, colores y radios de las HIG).
 - [ ] 4.1 Crear `iosApp` (Xcode 26, deployment target iOS 26) con raíz SwiftUI: un coordinador de `NavigationStack` y un `UIViewController` de Compose por destino, creado desde `iosMain`.
 - [ ] 4.1.1 Agregar SKIE a `:shared` para que SwiftUI observe los `StateFlow` de los ViewModels.
 - [ ] 4.1.2 Controles Liquid Glass en SwiftUI, tomando `CalculatorGlassView.swift` como referencia: barra superior, barra de prompt con botón de enviar/audio, menú lateral, sheets (adjuntar contexto, info del modelo local) y diálogo de seguridad del Vault.

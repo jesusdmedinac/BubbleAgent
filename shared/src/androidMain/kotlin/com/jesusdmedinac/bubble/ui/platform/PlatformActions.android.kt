@@ -15,24 +15,8 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.toClipEntry
 
-/*
- * Platform actions used by the shared chat UI. The interfaces and the remember functions are
- * what shared code calls; the bodies below are the Android implementation and become `actual`
- * declarations once the UI moves to commonMain.
- */
-
-/** Starts voice dictation; the recognized text arrives through the callback given to [rememberSpeechInput]. */
-interface SpeechInput {
-    fun start()
-}
-
-/** Opens the system share sheet for a piece of text. */
-interface ShareSheet {
-    fun share(text: String)
-}
-
 @Composable
-fun rememberSpeechInput(onSpokenText: (String) -> Unit): SpeechInput {
+actual fun rememberSpeechInput(onSpokenText: (String) -> Unit): SpeechInput {
     val context = LocalContext.current
     val currentOnSpokenText by rememberUpdatedState(onSpokenText)
     val launcher = rememberLauncherForActivityResult(
@@ -71,7 +55,7 @@ fun rememberSpeechInput(onSpokenText: (String) -> Unit): SpeechInput {
 }
 
 @Composable
-fun rememberShareSheet(): ShareSheet {
+actual fun rememberShareSheet(): ShareSheet {
     val context = LocalContext.current
     return remember(context) {
         object : ShareSheet {
@@ -92,5 +76,4 @@ fun rememberShareSheet(): ShareSheet {
     }
 }
 
-/** Plain-text clipboard entry for `LocalClipboard`. */
-fun plainTextClipEntry(text: String): ClipEntry = ClipData.newPlainText("Bubble", text).toClipEntry()
+actual fun plainTextClipEntry(text: String): ClipEntry = ClipData.newPlainText("Bubble", text).toClipEntry()

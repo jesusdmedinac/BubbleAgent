@@ -18,13 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesusdmedinac.bubble.R
+import com.jesusdmedinac.bubble.resources.Res
+import com.jesusdmedinac.bubble.resources.logo_bubble_phone
 import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.ui.main.sdui.BubbleSduiTemplates
@@ -62,7 +63,7 @@ fun BubbleAssistantMessage(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo_bubble_phone),
+                painter = painterResource(Res.drawable.logo_bubble_phone),
                 contentDescription = "Bubble Avatar",
                 modifier = Modifier
                     .size(20.dp)

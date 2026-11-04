@@ -1,6 +1,5 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -37,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
@@ -64,10 +66,12 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    // Intercept hardware back button when drawer is open
-    BackHandler(enabled = isDrawerOpen) {
-        isDrawerOpen = false
-    }
+    // Back closes the drawer before it leaves the screen.
+    NavigationBackHandler(
+        state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+        isBackEnabled = isDrawerOpen,
+        onBackCompleted = { isDrawerOpen = false },
+    )
 
     val progress by animateFloatAsState(
         targetValue = if (isDrawerOpen) 1f else 0f,

@@ -10,8 +10,8 @@ import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
 import com.jesusdmedinac.bubble.data.repository.BubbleRepository
 import com.jesusdmedinac.bubble.data.tracker.FakeScreenTimeSource
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertTrue
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -25,9 +25,9 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class FakeProfileBubbleRepository : BubbleRepository {
     private val _offlineProfile = MutableStateFlow(OfflineProfile())
@@ -172,14 +172,14 @@ class FakeProfileBubbleRepository : BubbleRepository {
 class ProfileVaultViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @Before
+    @BeforeTest
     fun setUpMainDispatcher() {
         // Run viewModelScope on the test thread so state updates arrive in order.
         Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @After
+    @AfterTest
     fun tearDownMainDispatcher() {
         Dispatchers.resetMain()
     }

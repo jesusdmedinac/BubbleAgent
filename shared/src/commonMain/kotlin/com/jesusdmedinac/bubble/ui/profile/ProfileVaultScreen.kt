@@ -1,6 +1,5 @@
 package com.jesusdmedinac.bubble.ui.profile
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,8 +22,6 @@ fun ProfileVaultScreen(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissionAndStats()
     }
-
-    BackHandler(onBack = onClose)
 
     ProfileVaultContent(
         uiState = uiState,
