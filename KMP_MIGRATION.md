@@ -172,7 +172,11 @@ Probado en un iPhone 13 Pro con iOS 27.0.1 (no hay simuladores instalados), comp
 - [x] 4.3 Motor de IA: `MockAiEngine` por ahora (D2). La sheet "Bubble Local" lo dice. Pendiente: evaluar Apple Foundation Models detrás de `BubbleAiEngine`.
 - [ ] 4.4 Textos con nombres técnicos de Android en la UI compartida: más de 20 (por ejemplo "Gemini Nano On-Device • 100% Privado", "Gemini Nano • Snapdragon NPU", "Activar en Ajustes de Android", "Android MCP Activo"). En iOS el botón "Activar en Ajustes de Android" del Vault no hace nada. Necesita textos por plataforma.
 - [x] 4.5 Verificado en el iPhone: chat con sugerencia y respuesta, adjuntar contexto (la barra crece y aparece enviar), Vault con barra nativa y regreso, menú con recientes. En Android, sin cambios: misma pantalla, adjuntar contexto igual, 20 pruebas en verde y el mismo AAB 1.2.0 (19). `kmp doctor --architecture` ya pasa sin avisos.
-- Pendiente: probar el dictado y compartir en el iPhone; correr `iosSimulatorArm64Test` cuando haya un runtime de simulador.
+- [x] 4.6 Simulador iPhone 18 Pro (iOS 27): las 14 pruebas de `commonTest` pasan con `iosSimulatorArm64Test`. Recorrido completo sin ayuda: escribir y enviar desde la barra nativa (sube con el teclado), tarjeta SDUI "Recordar en Vault" que guarda la memoria (el Vault pasa a 1 memoria), compartir, alerta de seguridad y regreso con el gesto del borde.
+- Dos errores encontrados en el simulador y corregidos:
+  - La respuesta de Bubble y la pregunta se creaban en el mismo milisegundo y el orden en pantalla dependía de la base. Ahora la respuesta lleva `timestamp + 1` (con prueba) y las consultas desempatan con `sender DESC`, lo que también ordena bien las conversaciones guardadas antes.
+  - Compartir no abría nada en iOS: `UIApplication.keyWindow` es `nil` en apps con escenas. Ahora se busca la ventana principal de la escena activa.
+- Pendiente: probar el dictado en el iPhone (en el simulador depende del micrófono de la Mac).
 - Nota: swiftly deja `TOOLCHAINS=swift` en la terminal, y con eso `xcodebuild` usa Swift 6.3 en lugar del compilador de Xcode 27 y falla (`Unknown argument: '-target-arch-variant'`). Desde la terminal hay que compilar con `env -u TOOLCHAINS xcodebuild …`. Xcode abierto desde el Dock no tiene el problema.
 
 ### Fase 5: Publicación y herramientas

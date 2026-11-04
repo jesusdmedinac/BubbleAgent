@@ -7,6 +7,8 @@ import androidx.compose.ui.platform.ClipEntry
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIViewController
+import platform.UIKit.UIWindow
+import platform.UIKit.UIWindowScene
 
 // On iOS the prompt bar is native SwiftUI, which does its own dictation; this one is never shown.
 @Composable
@@ -33,8 +35,12 @@ actual fun rememberShareSheet(): ShareSheet = remember {
 actual fun plainTextClipEntry(text: String): ClipEntry = ClipEntry.withPlainText(text)
 
 private fun topViewController(): UIViewController? {
-    @Suppress("DEPRECATION")
-    var controller = UIApplication.sharedApplication.keyWindow?.rootViewController
+    // UIApplication.keyWindow is nil in scene-based apps; look for the key window of a scene.
+    val window = UIApplication.sharedApplication.connectedScenes
+        .filterIsInstance<UIWindowScene>()
+        .flatMap { scene -> scene.windows.filterIsInstance<UIWindow>() }
+        .let { windows -> windows.firstOrNull { it.keyWindow } ?: windows.firstOrNull() }
+    var controller = window?.rootViewController
     while (controller?.presentedViewController != null) {
         controller = controller.presentedViewController
     }

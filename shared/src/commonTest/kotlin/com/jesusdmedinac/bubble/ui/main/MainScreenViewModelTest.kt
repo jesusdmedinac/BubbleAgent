@@ -212,6 +212,7 @@ class MainScreenViewModelTest {
         assertEquals(MessageSender.USER, state.messages[0].sender)
         assertEquals("Tocar guitarra", state.messages[0].text)
         assertEquals(MessageSender.BUBBLE, state.messages[1].sender)
+        assertTrue(state.messages[1].timestamp > state.messages[0].timestamp)
     }
 
     @Test

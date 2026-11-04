@@ -221,7 +221,10 @@ class MainScreenViewModel(
             id = assistantMsgId,
             conversationId = activeConvId,
             sender = MessageSender.BUBBLE,
-            text = ""
+            text = "",
+            // Both messages are created in the same millisecond; messages are sorted by
+            // timestamp, so the reply must come strictly after the question.
+            timestamp = userMessage.timestamp + 1
         )
         repository.insertChatMessage(initialAssistantMessage)
 

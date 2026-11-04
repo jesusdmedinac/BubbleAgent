@@ -49,12 +49,14 @@ selectMessagesByConversation:
 SELECT *
 FROM ChatMessageEntity
 WHERE conversationId = ?
-ORDER BY timestamp ASC;
+-- On equal timestamps (older builds), the question goes before the reply: 'USER' > 'BUBBLE'.
+ORDER BY timestamp ASC, sender DESC;
 
 selectAllMessages:
 SELECT *
 FROM ChatMessageEntity
-ORDER BY timestamp ASC;
+-- On equal timestamps (older builds), the question goes before the reply: 'USER' > 'BUBBLE'.
+ORDER BY timestamp ASC, sender DESC;
 
 insertMessage:
 INSERT OR REPLACE INTO ChatMessageEntity(id, conversationId, sender, text, timestamp, sduiJson)
