@@ -19,8 +19,14 @@ kotlin {
     withHostTest {}
   }
 
-  iosArm64()
-  iosSimulatorArm64()
+  listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
+    iosTarget.binaries.framework {
+      baseName = "Shared"
+      isStatic = true
+      // SQLDelight's native driver links against the system SQLite.
+      linkerOpts("-lsqlite3")
+    }
+  }
 
   jvmToolchain(17)
 

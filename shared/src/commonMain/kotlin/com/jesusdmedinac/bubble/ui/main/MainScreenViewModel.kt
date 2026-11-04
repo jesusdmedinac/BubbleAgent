@@ -28,6 +28,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 
+/** Prompt the "attach context" sheet uses for a disconnection goal. */
+const val OFFLINE_GOAL_PROMPT =
+    "Quiero establecer una meta de desconexión: reducir 30 minutos de redes sociales hoy. ¿Cómo me sugieres organizarme?"
+
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val recentQueries: List<String> = emptyList(),
@@ -112,6 +116,16 @@ class MainScreenViewModel(
 
     fun onInputTextChanged(text: String) {
         _inputText.value = text
+    }
+
+    /** Sentence that adds today's screen time to the prompt, used by the "attach context" sheet. */
+    fun screenTimeContext(): String {
+        val snapshot = digitalHealthSnapshot.value
+        val hours = snapshot.totalScreenTimeMinutes / 60
+        val minutes = snapshot.totalScreenTimeMinutes % 60
+        val topApp = snapshot.topApps.firstOrNull()?.appName
+        val appPart = if (topApp != null) " (principalmente en $topApp)" else ""
+        return "Contexto de hoy: ${hours}h ${minutes}m de tiempo de pantalla$appPart. "
     }
 
     fun onSelectConversation(conversationId: String) {

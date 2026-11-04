@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import com.jesusdmedinac.bubble.data.model.VaultCategory
 import com.jesusdmedinac.bubble.data.model.VaultMemoryItem
+import com.jesusdmedinac.bubble.ui.LocalNativeChromePadding
+import com.jesusdmedinac.bubble.ui.LocalUseNativeNavigation
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 import com.jesusdmedinac.bubble.ui.theme.SurfaceContainerLow
@@ -49,26 +51,35 @@ fun ProfileVaultContent(
         VaultSecurityInfoDialog(onDismissRequest = { isSecurityDialogOpen = false })
     }
 
+    val useNativeNavigation = LocalUseNativeNavigation.current
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(BgAmoled)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .then(
+                if (useNativeNavigation) Modifier
+                else Modifier
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+            )
     ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
+            contentPadding = LocalNativeChromePadding.current,
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
-                // 1. Navigation / Top Bar
-                ProfileVaultTopBar(
-                    onClose = onClose,
-                    onSecurityShieldClick = { isSecurityDialogOpen = true }
-                )
+                // 1. Navigation / Top Bar (the native shell draws its own)
+                if (!useNativeNavigation) {
+                    ProfileVaultTopBar(
+                        onClose = onClose,
+                        onSecurityShieldClick = { isSecurityDialogOpen = true }
+                    )
+                }
             }
 
             item {

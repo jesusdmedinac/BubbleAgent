@@ -187,6 +187,12 @@ class MainScreenViewModelTest {
     }
 
     @Test
+    fun screenTimeContext_describesTodaysScreenTime() {
+        val viewModel = createViewModel()
+        assertEquals("Contexto de hoy: 4h 0m de tiempo de pantalla. ", viewModel.screenTimeContext())
+    }
+
+    @Test
     fun uiState_onInputTextChanged() = runTest {
         val viewModel = createViewModel()
         viewModel.onInputTextChanged("Hola Bubble")

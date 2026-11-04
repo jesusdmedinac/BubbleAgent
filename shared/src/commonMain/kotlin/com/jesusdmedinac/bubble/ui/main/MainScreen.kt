@@ -40,6 +40,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
+import com.jesusdmedinac.bubble.ui.LocalUseNativeNavigation
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleCyan
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
@@ -65,6 +66,26 @@ fun MainScreen(
     var isModelSheetOpen by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    if (LocalUseNativeNavigation.current) {
+        // The native shell draws the bars, the menu and the sheets; only the chat stays here.
+        Box(modifier = modifier.fillMaxSize().background(BgAmoled)) {
+            MainScreenContent(
+                uiState = uiState,
+                listState = listState,
+                modifier = Modifier.fillMaxSize(),
+                onInputChanged = viewModel::onInputTextChanged,
+                onSendMessage = viewModel::onSendMessage,
+                onOpenSettingsClick = { viewModel.onOpenUsageSettings() },
+                onToggleActivity = viewModel::onToggleActivityCompleted,
+                onSimulateMcpClick = viewModel::simulateGeminiMcpInvocation,
+                onCustomAction = viewModel::onCustomAction,
+                healthSnapshot = healthSnapshot,
+                activities = activities,
+            )
+        }
+        return
+    }
 
     // Back closes the drawer before it leaves the screen.
     NavigationBackHandler(
@@ -224,16 +245,11 @@ fun MainScreen(
                 onDismissRequest = { isAttachSheetOpen = false },
                 onAttachScreenTime = {
                     isAttachSheetOpen = false
-                    val hours = healthSnapshot.totalScreenTimeMinutes / 60
-                    val minutes = healthSnapshot.totalScreenTimeMinutes % 60
-                    val topApp = healthSnapshot.topApps.firstOrNull()?.appName
-                    val appPart = if (topApp != null) " (principalmente en $topApp)" else ""
-                    val screenTimeContext = "Contexto de hoy: ${hours}h ${minutes}m de tiempo de pantalla$appPart. "
-                    viewModel.onInputTextChanged(uiState.inputText + screenTimeContext)
+                    viewModel.onInputTextChanged(uiState.inputText + viewModel.screenTimeContext())
                 },
                 onAttachGoal = {
                     isAttachSheetOpen = false
-                    viewModel.onInputTextChanged("Quiero establecer una meta de desconexión: reducir 30 minutos de redes sociales hoy. ¿Cómo me sugieres organizarme?")
+                    viewModel.onInputTextChanged(OFFLINE_GOAL_PROMPT)
                 },
                 onAttachScreenshot = {
                     isAttachSheetOpen = false

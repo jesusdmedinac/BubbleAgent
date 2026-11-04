@@ -31,6 +31,8 @@ import com.jesusdmedinac.bubble.data.model.ChatMessage
 import com.jesusdmedinac.bubble.data.model.DigitalHealthSnapshot
 import com.jesusdmedinac.bubble.data.model.MessageSender
 import com.jesusdmedinac.bubble.data.model.RecommendedActivity
+import com.jesusdmedinac.bubble.ui.LocalNativeChromePadding
+import com.jesusdmedinac.bubble.ui.LocalUseNativeNavigation
 import com.jesusdmedinac.bubble.ui.theme.BgAmoled
 import com.jesusdmedinac.bubble.ui.theme.BubbleTheme
 import com.jesusdmedinac.bubble.ui.theme.GlassWhite06
@@ -63,12 +65,15 @@ fun MainScreenContent(
         }
     }
 
+    val useNativeNavigation = LocalUseNativeNavigation.current
+    val nativeChromePadding = LocalNativeChromePadding.current
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = BgAmoled,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            BubbleTopAppBar(
+            if (!useNativeNavigation) BubbleTopAppBar(
                 onMenuClick = onMenuClick,
                 onModelSelect = onModelSelect,
                 onNewChat = onNewChat,
@@ -77,7 +82,7 @@ fun MainScreenContent(
             )
         },
         bottomBar = {
-            BottomInteractiveStack(
+            if (!useNativeNavigation) BottomInteractiveStack(
                 inputText = uiState.inputText,
                 onInputChanged = onInputChanged,
                 onSend = onSendMessage,
@@ -92,6 +97,7 @@ fun MainScreenContent(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp),
+            contentPadding = nativeChromePadding,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { Spacer(modifier = Modifier.height(8.dp)) }

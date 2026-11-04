@@ -102,7 +102,7 @@ Liquid Glass real solo lo dibuja el sistema en componentes nativos de iOS 26. Co
 | Barra de prompt flotante | `FloatingPromptBar` (M3) | SwiftUI con `.glassEffect`, como `safeAreaInset` inferior; toma como referencia `CalculatorGlassView.swift` de compose-calculator |
 | Menú lateral, sheets, diálogos | composables actuales | `.sheet`, `.alert` y un menú nativo |
 
-El estado lo siguen dando los ViewModels compartidos. Lo que SwiftUI necesita observar directamente (texto del prompt, si está generando, título de la conversación) se expone con SKIE (skill `kotlin-interop-swift-coroutines`).
+El estado lo siguen dando los ViewModels compartidos. Lo que SwiftUI necesita observar directamente (texto del prompt, si está generando, título de la conversación) se expone con `BubbleIosBridge`, que entrega el estado a Swift con callbacks (sin SKIE, ver 4.1.1).
 
 Deployment target **iOS 26**, con Xcode 26 o posterior.
 
@@ -160,16 +160,20 @@ Versiones confirmadas en Maven Central y en las notas de release: Compose Multip
   - Las pruebas de `commonTest` compilan para iOS, pero `iosSimulatorArm64Test` no corre: Xcode 27 está instalado sin runtimes de iOS ni simuladores. Hay que instalarlos antes de la fase 4 (`xcodebuild -downloadPlatform iOS`).
 - Pasan a la fase 4: el 3.0 (slots `topBar`/`promptBar`), la variante iOS de `BubbleTheme` y el `title`/`onNavigate` de las rutas. Su forma depende de lo que diga la prueba técnica 4.0 (por ejemplo, si la barra de prompt queda en SwiftUI o en Compose), y hacerlos antes sería adivinar la API.
 
-### Fase 4: Target iOS
-- [ ] 4.0 Prueba técnica corta, siguiendo la guía de Liquid Glass (rama `lg-nav` de kotlinconf-app): `NavigationStack` de SwiftUI con la pantalla de chat en Compose, y la barra de prompt con `.glassEffect` como `safeAreaInset` inferior. Validar refracción durante el scroll, gestos y teclado. Si la barra de prompt no funciona bien, elegir una de las alternativas de la sección 2.1.
-- [ ] 4.0.1 Con el resultado de 4.0: slots `topBar`/`promptBar` en `MainScreenContent` y `ProfileVaultContent`, `title` en cada ruta, callback `onNavigate` en `MainNavigation` y `BubbleTheme` para iOS (fuente del sistema, colores y radios de las HIG).
-- [ ] 4.1 Crear `iosApp` (Xcode 26, deployment target iOS 26) con raíz SwiftUI: un coordinador de `NavigationStack` y un `UIViewController` de Compose por destino, creado desde `iosMain`.
-- [ ] 4.1.1 Agregar SKIE a `:shared` para que SwiftUI observe los `StateFlow` de los ViewModels.
-- [ ] 4.1.2 Controles Liquid Glass en SwiftUI, tomando `CalculatorGlassView.swift` como referencia: barra superior, barra de prompt con botón de enviar/audio, menú lateral, sheets (adjuntar contexto, info del modelo local) y diálogo de seguridad del Vault.
-- [ ] 4.2 `actual` iOS: `NativeSqliteDriver`, `ScreenTimeSource` (modo demo, según D3), `SpeechInput` (Speech framework), `ShareSheet` (`UIActivityViewController`).
-- [ ] 4.3 Motor de IA en iOS según D2: arrancar con `MockAiEngine` y después evaluar Apple Foundation Models detrás de `BubbleAiEngine`.
-- [ ] 4.4 Revisar que los textos de UI no muestren nombres técnicos (por ejemplo "Gemini Nano On-Device" o "Android MCP Bridge" en iOS).
-- [ ] 4.5 Correr la app en el simulador y en un iPhone.
+### Fase 4: Target iOS — base terminada el 2026-11-03
+Probado en un iPhone 13 Pro con iOS 27.0.1 (no hay simuladores instalados), compilado con Xcode 27 y deployment target iOS 26.
+
+- [x] 4.0 Prueba técnica: `NavigationStack` de SwiftUI con el chat en Compose y la barra de prompt con `.glassEffect` como `safeAreaInset` inferior. Funciona: Compose dibuja de borde a borde debajo de las barras de vidrio, y cada pantalla recibe el espacio de las barras (`ChromeInsets`, medido en Swift con `onGeometryChange`) como `contentPadding`, así que el contenido se desplaza por debajo y la barra crece con el texto.
+- [x] 4.0.1 En `commonMain`: `LocalUseNativeNavigation` y `LocalNativeChromePadding` (`ui/NativeChrome.kt`). Con el modo nativo, `MainScreen` deja solo el chat (sin barra superior, barra de prompt, menú lateral ni sheets de Compose) y `ProfileVaultContent` oculta su barra. Las rutas son `BubbleRoute` con `title`. En lugar de un callback `onNavigate` en `MainNavigation`, iOS no usa `NavDisplay`: cada destino es su propio view controller (`MainViewController` y `ScreenViewController` en `iosMain`), como en la guía. El tema se queda igual: `FontFamily.SansSerif` ya es la fuente del sistema en iOS.
+- [x] 4.1 `iosApp` generado con xcodegen (`iosApp/project.yml`; el `.xcodeproj` también se commitea). Bundle `com.jesusdmedinac.bubble`, equipo `RH386Z3CQP` (el mismo de compose-calculator), framework estático `Shared` compilado por `embedAndSignAppleFrameworkForXcode` y enlazado con `-lsqlite3`. Ícono a partir de `MVP/app-launcher-icon.png` sobre fondo negro.
+- [x] 4.1.1 Sin SKIE: `BubbleIosBridge` (en `iosMain`) comparte la misma instancia de los ViewModels con Compose y le entrega `ChatUiState` a Swift en el hilo principal con `watch`, el mismo patrón que `CalculatorBridge` en compose-calculator. Evita un plugin más y su compatibilidad con Kotlin 2.3.
+- [x] 4.1.2 Controles nativos en SwiftUI: toolbar (menú, "Bubble Local", conversación nueva, perfil), barra de prompt de vidrio con adjuntar, dictado y enviar, menú como sheet (conversación nueva, Vault, próximamente y recientes), sheets de adjuntar contexto e info del modelo, y alerta de seguridad del Vault. El borrador del prompt vive en Swift y se envía con `bridge.send`. Los textos de adjuntar contexto pasaron al ViewModel (`screenTimeContext()` y `OFFLINE_GOAL_PROMPT`), con prueba.
+- [x] 4.2 `actual` iOS: `NativeSqliteDriver` en `IosAppGraph` (los mensajes sobreviven al reabrir la app), `IosScreenTimeSource` en modo demo (D3), `ShareSheet` con `UIActivityViewController` y portapapeles con `ClipEntry.withPlainText`. El dictado se hizo en Swift con el framework Speech (`Dictation.swift`, es-MX, en el dispositivo si se puede), porque la barra de prompt es nativa; el `SpeechInput` de Compose no se usa en iOS.
+- [x] 4.3 Motor de IA: `MockAiEngine` por ahora (D2). La sheet "Bubble Local" lo dice. Pendiente: evaluar Apple Foundation Models detrás de `BubbleAiEngine`.
+- [ ] 4.4 Textos con nombres técnicos de Android en la UI compartida: más de 20 (por ejemplo "Gemini Nano On-Device • 100% Privado", "Gemini Nano • Snapdragon NPU", "Activar en Ajustes de Android", "Android MCP Activo"). En iOS el botón "Activar en Ajustes de Android" del Vault no hace nada. Necesita textos por plataforma.
+- [x] 4.5 Verificado en el iPhone: chat con sugerencia y respuesta, adjuntar contexto (la barra crece y aparece enviar), Vault con barra nativa y regreso, menú con recientes. En Android, sin cambios: misma pantalla, adjuntar contexto igual, 20 pruebas en verde y el mismo AAB 1.2.0 (19). `kmp doctor --architecture` ya pasa sin avisos.
+- Pendiente: probar el dictado y compartir en el iPhone; correr `iosSimulatorArm64Test` cuando haya un runtime de simulador.
+- Nota: swiftly deja `TOOLCHAINS=swift` en la terminal, y con eso `xcodebuild` usa Swift 6.3 en lugar del compilador de Xcode 27 y falla (`Unknown argument: '-target-arch-variant'`). Desde la terminal hay que compilar con `env -u TOOLCHAINS xcodebuild …`. Xcode abierto desde el Dock no tiene el problema.
 
 ### Fase 5: Publicación y herramientas
 - [ ] 5.1 Traer de compose-calculator el script de revisión del AAB, fastlane (Play y App Store) y el workflow de GitHub Actions, adaptados a `:androidApp`.
