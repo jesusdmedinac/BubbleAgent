@@ -1,0 +1,69 @@
+{
+  "$comment": "Reacciones instantáneas de Bubble (se superponen al estado activo). Sonidos: tonos seno sintetizados con barrido exponencial de frecuencia; ataque 8 ms y caída exponencial hasta el final de la duración.",
+  "version": 1,
+  "soundRules": {
+    "waveform": "sine",
+    "maxDurationS": 0.5,
+    "volume": "bajo; respeta siempre el modo silencio del sistema",
+    "silentStates": ["empanada", "dormida"],
+    "noVoice": true
+  },
+  "reactions": {
+    "tap": {
+      "description": "Plop: doble parpadeo, suelta una burbujita y oscila el cuerpo completo un 3 %.",
+      "wobble": {
+        "enabled": true,
+        "amplitude": 0.03,
+        "frequencyHz": 6,
+        "damping": 6,
+        "durationS": 0.7,
+        "formula": "w = A·sin(2π·f·t)·e^(−d·t); scaleX = 1 + w; scaleY = 1 − w",
+        "rule": "Solo como reacción instantánea al toque. Nunca en reposo ni en transiciones. Nunca dobleces locales."
+      },
+      "blinksAtS": [0.05, 0.35],
+      "spawnBubbles": 1,
+      "sound": [{ "fromHz": 900, "toHz": 240, "durationS": 0.13, "gain": 0.25, "delayS": 0 }]
+    },
+    "appear": {
+      "description": "Se forma desde un punto; la película gira rápido y se calma. Sin rebote.",
+      "durationS": 0.9,
+      "scale": { "from": 0.05, "to": 1, "easing": "easeOutCubic" },
+      "opacityFadeInS": 0.36,
+      "extraSwirlDegPerS": 140,
+      "sound": [{ "fromHz": 280, "toHz": 620, "durationS": 0.32, "gain": 0.18, "delayS": 0 }]
+    },
+    "celebrate": {
+      "description": "Salto suave, ojos en sonrisa, colores acelerados y lluvia de burbujitas.",
+      "durationS": 1.9,
+      "hopPx": 16,
+      "hopDurationS": 0.55,
+      "happyHoldS": 1.6,
+      "extraSwirlDegPerS": 110,
+      "spawnBubbles": 14,
+      "sound": [
+        { "fromHz": 520, "toHz": 700, "durationS": 0.14, "gain": 0.18, "delayS": 0 },
+        { "fromHz": 660, "toHz": 880, "durationS": 0.14, "gain": 0.18, "delayS": 0.12 },
+        { "fromHz": 780, "toHz": 1100, "durationS": 0.2, "gain": 0.2, "delayS": 0.24 }
+      ]
+    },
+    "farewell": {
+      "description": "Sonríe y se aleja flotando hacia arriba mientras se desvanece. Bubble NUNCA revienta.",
+      "durationS": 1.6,
+      "risePx": 80,
+      "easing": "easeInQuad",
+      "sound": [
+        { "fromHz": 620, "toHz": 300, "durationS": 0.45, "gain": 0.14, "delayS": 0 },
+        { "fromHz": 500, "toHz": 240, "durationS": 0.5, "gain": 0.08, "delayS": 0.18 }
+      ]
+    }
+  },
+  "thinkingRhythm": {
+    "description": "Cómo se adapta la coreografía de pensando a la latencia de la respuesta del chat.",
+    "rules": [
+      { "latency": "< 2 s", "behavior": "Solo entrecerrar y doble parpadeo" },
+      { "latency": "2–7 s", "behavior": "Un ciclo completo de la coreografía" },
+      { "latency": "> 7 s", "behavior": "Repetir el ciclo con 1 s de pausa entre repeticiones" },
+      { "latency": "Al llegar la respuesta", "behavior": "Interrumpir y volver a neutral en 0.6 s sin terminar el ciclo" }
+    ]
+  }
+}
