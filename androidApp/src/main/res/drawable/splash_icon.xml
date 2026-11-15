@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Icono del splash (Android 12+): el lienzo mide 288dp y el sistema recorta un círculo de 192dp.
-     El inset deja el logo dentro de ese círculo. Se usa un PNG ligero porque el vector del ícono
-     adaptativo es demasiado pesado y el sistema recurre al ícono genérico. -->
+<!-- Splash icon (Android 12+): 288dp canvas with a 192dp system crop circle.
+     The inset positions the logo cleanly within the circle bounds. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/splash_logo"
     android:inset="20dp" />

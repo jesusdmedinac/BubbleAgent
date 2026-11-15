@@ -1,9 +1,9 @@
 {
-  "$comment": "Especificación de los estados de Bubble. Todas las longitudes son relativas al radio R salvo que se indique. Cada estado es un conjunto de parámetros; la app interpola (lerp exponencial) hacia el estado destino.",
+  "$comment": "Bubble state specification. All lengths are relative to radius R unless specified. Each state is a set of parameters; the app interpolates (exponential lerp) toward target state.",
   "version": 2,
   "geometry": {
     "outline": "circle",
-    "outlineRule": "Siempre un círculo perfecto. Única excepción: oscilación del 3 % al tocar (ver reactions.json).",
+    "outlineRule": "Always a perfect circle. Single exception: 3% touch wobble (see reactions.json).",
     "highlight": { "arcFromDeg": 200, "arcToDeg": 245, "radius": 0.8, "strokeWidthAtR100": 5, "fixedInWorld": true },
     "lightDot": { "angleDeg": 40, "radius": 0.78, "sizeAtR100": 3 },
     "thickRim": { "position": "bottom-right", "dashFraction": 0.24, "dashOffsetFraction": 0.02, "strokeWidthAtR100": 7, "opacity": 0.45 },
@@ -19,7 +19,7 @@
       "semiAxisY": 0.22,
       "haloExtra": 0.05,
       "haloOpacity": 0.16,
-      "shapeModel": "Región entre una curva superior y una inferior. top/bot recortan en plano (párpados invisibles); happy convierte la parte inferior en media luna; closed colapsa a un arco fino que cuelga hacia abajo."
+      "shapeModel": "Region between an upper and a lower curve. top/bot perform flat cuts (invisible eyelids); happy turns lower half into crescent; closed collapses to a thin downward arc."
     },
     "liquid": { "defaultLevel": 0.62, "waveFrequency": 0.03 }
   },
@@ -41,65 +41,65 @@
     "doubleBlinkPeriodS": 3.6
   },
   "parameters": {
-    "iri": "Intensidad del borde iridiscente (0–1)",
-    "swirl": "Velocidad de giro de la película, grados/s",
-    "rimW": "Grosor del borde a R=100",
-    "fog": "Opacidad del cuerpo (niebla interior)",
-    "band": "Opacidad de las bandas de película",
-    "scale": "Escala del cuerpo (acercarse/alejarse)",
-    "bob": "Amplitud de flotación vertical, px a R=92",
-    "bobSpd": "Velocidad de flotación",
-    "yOff": "Desplazamiento vertical (más bajo = más pesado)",
-    "xDrift": "Deriva horizontal, px",
-    "rate": "Burbujitas por segundo",
-    "lvl": "Nivel del horizonte interior (0 arriba, 1 abajo)",
-    "slosh": "Amplitud de la ola interior, px",
-    "liqSpd": "Velocidad de la ola interior",
-    "tiltLiq": "Inclinación del horizonte, px",
-    "eS": "Escala de ojos",
-    "eOp": "Opacidad de ojos",
-    "halo": "Multiplicador del halo de ojos",
-    "top": "Recorte superior de ojos (0–0.5)",
-    "bot": "Recorte inferior de ojos (0–0.5)",
-    "happy": "Ojos en media luna (0–1)",
-    "closed": "Ojos cerrados en arco (0–1)",
-    "gx": "Mirada horizontal, px",
-    "gy": "Mirada vertical, px",
-    "glance": "Amplitud de mirada lateral oscilante",
-    "think": "Peso de la coreografía de pensando (0–1)",
-    "blink": "Habilita el parpadeo automático (0–1)",
-    "dbl": "Cada parpadeo es doble (0/1)"
+    "iri": "Iridescent rim intensity (0–1)",
+    "swirl": "Soap film rotation speed, deg/s",
+    "rimW": "Rim stroke width at R=100",
+    "fog": "Body opacity (inner mist)",
+    "band": "Soap film band opacity",
+    "scale": "Body scale (zoom in/out)",
+    "bob": "Vertical floating amplitude, px at R=92",
+    "bobSpd": "Floating speed",
+    "yOff": "Vertical offset (lower = heavier)",
+    "xDrift": "Horizontal drift, px",
+    "rate": "Micro-bubbles per second",
+    "lvl": "Inner horizon level (0 top, 1 bottom)",
+    "slosh": "Inner wave amplitude, px",
+    "liqSpd": "Inner wave speed",
+    "tiltLiq": "Horizon tilt, px",
+    "eS": "Eye scale",
+    "eOp": "Eye opacity",
+    "halo": "Eye halo multiplier",
+    "top": "Upper eye cut (0–0.5)",
+    "bot": "Lower eye cut (0–0.5)",
+    "happy": "Crescent smiling eyes (0–1)",
+    "closed": "Closed eyes in arc (0–1)",
+    "gx": "Horizontal gaze, px",
+    "gy": "Vertical gaze, px",
+    "glance": "Oscillating lateral glance amplitude",
+    "think": "Thinking choreography weight (0–1)",
+    "blink": "Enables automatic blinking (0–1)",
+    "dbl": "Every blink is a double blink (0/1)"
   },
   "base": { "iri": 0.85, "swirl": 14, "rimW": 2.5, "fog": 0.03, "band": 0.2, "scale": 1, "bob": 6, "bobSpd": 1, "yOff": 0, "xDrift": 6, "rate": 0.35, "lvl": 0.62, "slosh": 6, "liqSpd": 1.4, "tiltLiq": 0, "eS": 1, "eOp": 0.95, "halo": 1, "top": 0, "bot": 0, "happy": 0, "closed": 0, "gx": 0, "gy": 0, "glance": 0, "think": 0, "blink": 1, "dbl": 0 },
   "states": {
     "flotando": {
-      "trigger": "Uso equilibrado",
+      "trigger": "Balanced usage",
       "sound": null,
       "overrides": {}
     },
     "empanada": {
-      "trigger": "Racha larga de uso continuo",
-      "note": "Cansancio, no tristeza: el recorte superior es plano, nunca cae hacia los lados.",
+      "trigger": "Extended continuous screen time session",
+      "note": "Tiredness, not sadness: upper crop is flat, never slants downward.",
       "sound": null,
       "overrides": { "iri": 0.2, "swirl": 2, "rimW": 2, "fog": 0.15, "band": 0.05, "scale": 0.98, "bob": 2, "bobSpd": 0.45, "yOff": 14, "xDrift": 2, "rate": 0, "lvl": 0.58, "slosh": 1.5, "liqSpd": 0.4, "eOp": 0.62, "halo": 0.4, "top": 0.5 }
     },
     "iridiscente": {
-      "trigger": "Actividad offline completada",
+      "trigger": "Offline activity completed",
       "sound": "celebrate",
       "overrides": { "iri": 1, "swirl": 55, "rimW": 3.5, "band": 0.4, "scale": 1.06, "bob": 9, "bobSpd": 1.7, "yOff": -6, "xDrift": 10, "rate": 1.8, "lvl": 0.66, "slosh": 11, "liqSpd": 2.6, "happy": 1, "blink": 0 }
     },
     "curiosa": {
-      "trigger": "Aprende un interés nuevo en el chat",
+      "trigger": "Learns a new interest in chat",
       "sound": null,
       "overrides": { "swirl": 20, "band": 0.22, "scale": 1.12, "bob": 4, "bobSpd": 1.1, "yOff": 4, "xDrift": 3, "rate": 0.3, "tiltLiq": 18, "eS": 1.3, "gx": 3, "gy": -2, "glance": 1, "dbl": 1 }
     },
     "dormida": {
-      "trigger": "Noche o Focus mode",
+      "trigger": "Night time or Focus mode",
       "sound": null,
       "overrides": { "iri": 0.4, "swirl": 4, "rimW": 2, "fog": 0.05, "band": 0.08, "scale": 0.86, "bob": 3, "bobSpd": 0.35, "yOff": 18, "xDrift": 2, "rate": 0.12, "lvl": 0.58, "slosh": 1.5, "liqSpd": 0.35, "halo": 0, "top": 0.5, "bot": 0.5, "closed": 1, "blink": 0 }
     },
     "pensando": {
-      "trigger": "Genera una respuesta en el chat",
+      "trigger": "Generates on-device chat response",
       "sound": null,
       "overrides": { "swirl": 26, "band": 0.28, "bob": 4, "bobSpd": 0.8, "xDrift": 2, "rate": 0.5, "think": 1 },
       "choreography": {
@@ -113,18 +113,18 @@
         },
         "keyframes": [
           { "t": 0.0, "pose": "neutral" },
-          { "t": 0.5, "pose": "squint", "phase": "Entrecierra los ojos" },
-          { "t": 1.6, "pose": "squint", "phase": "Parpadea dos veces" },
-          { "t": 2.2, "pose": "lookRight", "phase": "Mira a un lado: un ojo abierto, el otro entrecerrado" },
-          { "t": 3.4, "pose": "lookRight", "phase": "Parpadea dos veces" },
-          { "t": 4.0, "pose": "lookLeft", "phase": "Cambia de lado" },
-          { "t": 5.2, "pose": "lookLeft", "phase": "Parpadea dos veces" },
-          { "t": 5.8, "pose": "neutral", "phase": "Vuelve a la posición inicial" },
-          { "t": 6.8, "pose": "neutral", "phase": "Pausa antes de repetir" }
+          { "t": 0.5, "pose": "squint", "phase": "Squints eyes" },
+          { "t": 1.6, "pose": "squint", "phase": "Double blinks" },
+          { "t": 2.2, "pose": "lookRight", "phase": "Looks sideways: one eye open, the other squinted" },
+          { "t": 3.4, "pose": "lookRight", "phase": "Double blinks" },
+          { "t": 4.0, "pose": "lookLeft", "phase": "Switches sides" },
+          { "t": 5.2, "pose": "lookLeft", "phase": "Double blinks" },
+          { "t": 5.8, "pose": "neutral", "phase": "Returns to initial position" },
+          { "t": 6.8, "pose": "neutral", "phase": "Pause before repeating" }
         ],
         "blinksAtS": [0.75, 1.1, 2.55, 2.9, 4.35, 4.7],
         "blinkDepth": 0.92,
-        "notes": "Derecha/izquierda desde el punto de vista del usuario. El parpadeo automático se desactiva durante la coreografía."
+        "notes": "Right/left from user's perspective. Automatic blinking is disabled during choreography."
       }
     }
   }

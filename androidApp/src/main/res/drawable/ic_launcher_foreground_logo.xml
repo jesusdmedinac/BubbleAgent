@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Capa frontal del ícono adaptativo: lienzo de 108dp con círculo visible de 72dp.
-     Usa el logo en PNG porque el vector anterior (472 trazados) no carga y el sistema
-     mostraba el ícono genérico de Android. -->
+<!-- Foreground layer for adaptive icon: 108dp canvas with 72dp visible circle.
+     Uses a lightweight PNG logo to prevent fallback to generic Android icon. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/splash_logo"
     android:inset="18dp" />

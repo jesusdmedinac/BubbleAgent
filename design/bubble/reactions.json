@@ -1,16 +1,16 @@
 {
-  "$comment": "Reacciones instantáneas de Bubble (se superponen al estado activo). Sonidos: tonos seno sintetizados con barrido exponencial de frecuencia; ataque 8 ms y caída exponencial hasta el final de la duración.",
+  "$comment": "Bubble instant reactions (layered on top of the active state). Sounds: synthesized sine tones with exponential frequency sweep; 8 ms attack and exponential decay to duration end.",
   "version": 1,
   "soundRules": {
     "waveform": "sine",
     "maxDurationS": 0.5,
-    "volume": "bajo; respeta siempre el modo silencio del sistema",
+    "volume": "low; always respects system silent mode",
     "silentStates": ["empanada", "dormida"],
     "noVoice": true
   },
   "reactions": {
     "tap": {
-      "description": "Plop: doble parpadeo, suelta una burbujita y oscila el cuerpo completo un 3 %.",
+      "description": "Plop: double blink, emits a small bubble, and wobbles whole body by 3%.",
       "wobble": {
         "enabled": true,
         "amplitude": 0.03,
@@ -18,14 +18,14 @@
         "damping": 6,
         "durationS": 0.7,
         "formula": "w = A·sin(2π·f·t)·e^(−d·t); scaleX = 1 + w; scaleY = 1 − w",
-        "rule": "Solo como reacción instantánea al toque. Nunca en reposo ni en transiciones. Nunca dobleces locales."
+        "rule": "Only as an instant reaction to touch. Never at rest or in transitions. Never local bends."
       },
       "blinksAtS": [0.05, 0.35],
       "spawnBubbles": 1,
       "sound": [{ "fromHz": 900, "toHz": 240, "durationS": 0.13, "gain": 0.25, "delayS": 0 }]
     },
     "appear": {
-      "description": "Se forma desde un punto; la película gira rápido y se calma. Sin rebote.",
+      "description": "Emerges from a single point; soap film spins fast then settles. No bounce.",
       "durationS": 0.9,
       "scale": { "from": 0.05, "to": 1, "easing": "easeOutCubic" },
       "opacityFadeInS": 0.36,
@@ -33,7 +33,7 @@
       "sound": [{ "fromHz": 280, "toHz": 620, "durationS": 0.32, "gain": 0.18, "delayS": 0 }]
     },
     "celebrate": {
-      "description": "Salto suave, ojos en sonrisa, colores acelerados y lluvia de burbujitas.",
+      "description": "Gentle hop, smiling eyes, accelerated colors, and micro-bubble shower.",
       "durationS": 1.9,
       "hopPx": 16,
       "hopDurationS": 0.55,
@@ -47,7 +47,7 @@
       ]
     },
     "farewell": {
-      "description": "Sonríe y se aleja flotando hacia arriba mientras se desvanece. Bubble NUNCA revienta.",
+      "description": "Smiles and floats upward while fading away. Bubble NEVER bursts.",
       "durationS": 1.6,
       "risePx": 80,
       "easing": "easeInQuad",
@@ -58,12 +58,12 @@
     }
   },
   "thinkingRhythm": {
-    "description": "Cómo se adapta la coreografía de pensando a la latencia de la respuesta del chat.",
+    "description": "How the thinking choreography adapts to chat response latency.",
     "rules": [
-      { "latency": "< 2 s", "behavior": "Solo entrecerrar y doble parpadeo" },
-      { "latency": "2–7 s", "behavior": "Un ciclo completo de la coreografía" },
-      { "latency": "> 7 s", "behavior": "Repetir el ciclo con 1 s de pausa entre repeticiones" },
-      { "latency": "Al llegar la respuesta", "behavior": "Interrumpir y volver a neutral en 0.6 s sin terminar el ciclo" }
+      { "latency": "< 2 s", "behavior": "Squint and double blink only" },
+      { "latency": "2–7 s", "behavior": "One full cycle of the choreography" },
+      { "latency": "> 7 s", "behavior": "Repeat cycle with 1 s pause between iterations" },
+      { "latency": "When reply arrives", "behavior": "Interrupt and return to neutral within 0.6 s without completing cycle" }
     ]
   }
 }

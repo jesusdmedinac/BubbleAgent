@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
-  <title>Bubble · maestra en reposo (R = 100)</title>
-  <desc>Diseñada para fondo oscuro (#121216). Fondo transparente.</desc>
+  <title>Bubble · master at rest (R = 100)</title>
+  <desc>Designed for dark background (#121216). Transparent background.</desc>
   <defs>
     <linearGradient id="iri" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#7F77DD"/>
@@ -13,20 +13,20 @@
     </linearGradient>
     <clipPath id="body"><circle cx="120" cy="120" r="100"/></clipPath>
   </defs>
-  <!-- Cuerpo: casi invisible -->
+  <!-- Body: almost invisible -->
   <circle cx="120" cy="120" r="100" fill="#E6F1FB" fill-opacity="0.03"/>
-  <!-- Reflejo interior (horizonte en 0.62 de la altura) -->
+  <!-- Internal reflection (horizon at 0.62 height) -->
   <path clip-path="url(#body)" d="M15 146 C 60 130, 100 164, 145 146 S 210 134, 225 144 L225 225 L15 225 Z" fill="#B5D4F4" fill-opacity="0.13"/>
-  <!-- Bandas de la película (rotan en animación) -->
+  <!-- Soap film bands (rotate in animation) -->
   <circle cx="120" cy="120" r="86" fill="none" stroke="url(#iri)" stroke-width="3" stroke-opacity="0.2" pathLength="100" stroke-dasharray="18 82" stroke-linecap="round" transform="rotate(150 120 120)"/>
   <circle cx="120" cy="120" r="72" fill="none" stroke="url(#iri)" stroke-width="2" stroke-opacity="0.16" pathLength="100" stroke-dasharray="11 89" stroke-linecap="round" transform="rotate(300 120 120)"/>
-  <!-- Borde iridiscente + borde grueso abajo a la derecha -->
+  <!-- Iridescent rim + thick rim at bottom right -->
   <circle cx="120" cy="120" r="100" fill="none" stroke="url(#iri)" stroke-width="2.5"/>
   <circle cx="120" cy="120" r="100" fill="none" stroke="url(#iri)" stroke-width="7" stroke-opacity="0.45" stroke-linecap="round" pathLength="100" stroke-dasharray="24 76" stroke-dashoffset="-2"/>
-  <!-- Luz fija en el mundo: arco 200°–245° a 0.8R y punto a 40° / 0.78R -->
+  <!-- Fixed world specular light: arc 200°–245° at 0.8R and dot at 40° / 0.78R -->
   <path d="M44.8 92.6 A80 80 0 0 1 86.2 47.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="5" stroke-linecap="round"/>
   <circle cx="179.8" cy="170.1" r="3" fill="#FFFFFF" fill-opacity="0.7"/>
-  <!-- Ojos de luz: ±0.23R, semiejes 0.126R × 0.22R, halo +0.05R al 16 % -->
+  <!-- Light eyes: ±0.23R, semi-axes 0.126R × 0.22R, halo +0.05R at 16% -->
   <ellipse cx="97" cy="120" rx="17.6" ry="27" fill="#B5D4F4" fill-opacity="0.16"/>
   <ellipse cx="143" cy="120" rx="17.6" ry="27" fill="#B5D4F4" fill-opacity="0.16"/>
   <ellipse cx="97" cy="120" rx="12.6" ry="22" fill="#F4FAFD" fill-opacity="0.95"/>

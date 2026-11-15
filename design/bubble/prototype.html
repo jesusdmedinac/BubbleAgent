@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bubble · prototipo</title>
+<title>Bubble · Prototype</title>
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #0B0B0D; color: #D3D1C7; font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -25,11 +25,11 @@
 <body>
 <main>
   <h1>Bubble</h1>
-  <p class="lead">Prototipo de estados y reacciones. Valores de <code>states.json</code> y <code>reactions.json</code>.</p>
+  <p class="lead">States &amp; reactions prototype. Values from <code>states.json</code> and <code>reactions.json</code>.</p>
 
-  <h2>Estados</h2>
+  <h2>States</h2>
   <div class="stage">
-    <svg viewBox="0 0 640 320" role="img" aria-label="Bubble en distintos estados">
+    <svg viewBox="0 0 640 320" role="img" aria-label="Bubble in various emotional states">
       <defs>
         <linearGradient id="s-iri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7F77DD"/><stop offset="0.2" stop-color="#D4537E"/><stop offset="0.4" stop-color="#EF9F27"/><stop offset="0.55" stop-color="#FAC775"/><stop offset="0.7" stop-color="#97C459"/><stop offset="0.85" stop-color="#5DCAA5"/><stop offset="1" stop-color="#85B7EB"/></linearGradient>
         <clipPath id="s-clip"><circle id="s-clipC"/></clipPath>
@@ -48,14 +48,14 @@
     </svg>
   </div>
   <div class="row" id="s-btns">
-    <button data-s="flotando">Flotando</button><button data-s="empanada">Empañada</button><button data-s="iridiscente">Iridiscente</button><button data-s="curiosa">Curiosa</button><button data-s="dormida">Dormida</button><button data-s="pensando">Pensando</button>
+    <button data-s="flotando">Floating</button><button data-s="empanada">Foggy</button><button data-s="iridiscente">Iridescent</button><button data-s="curiosa">Curious</button><button data-s="dormida">Asleep</button><button data-s="pensando">Thinking</button>
   </div>
   <p class="note" id="s-lab"></p>
   <p class="phase" id="s-phase"></p>
 
-  <h2>Reacciones</h2>
+  <h2>Reactions</h2>
   <div class="stage" id="m-stage" style="cursor:pointer">
-    <svg viewBox="0 0 640 320" role="img" aria-label="Bubble interactiva, tócala">
+    <svg viewBox="0 0 640 320" role="img" aria-label="Interactive Bubble, tap it">
       <defs>
         <linearGradient id="m-iri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7F77DD"/><stop offset="0.2" stop-color="#D4537E"/><stop offset="0.4" stop-color="#EF9F27"/><stop offset="0.55" stop-color="#FAC775"/><stop offset="0.7" stop-color="#97C459"/><stop offset="0.85" stop-color="#5DCAA5"/><stop offset="1" stop-color="#85B7EB"/></linearGradient>
         <clipPath id="m-clip"><circle cx="320" cy="170" r="90"/></clipPath>
@@ -76,31 +76,31 @@
     </svg>
   </div>
   <div class="row">
-    <button id="m-tap">Tocar</button><button id="m-app">Aparecer</button><button id="m-cel">Celebrar</button><button id="m-bye">Despedirse</button>
-    <label><input type="checkbox" id="m-wob" checked> Oscilación 3 % al tocar</label>
-    <label><input type="checkbox" id="m-snd" checked> Sonido</label>
+    <button id="m-tap">Tap</button><button id="m-app">Appear</button><button id="m-cel">Celebrate</button><button id="m-bye">Dismiss</button>
+    <label><input type="checkbox" id="m-wob" checked> 3% touch oscillation</label>
+    <label><input type="checkbox" id="m-snd" checked> Sound</label>
   </div>
   <p class="note" id="m-lab"></p>
 </main>
 
 <script>
-/* ---------- Estados ---------- */
+/* ---------- States ---------- */
 (() => {
 const $ = i => document.getElementById('s-' + i), f = n => n.toFixed(1), NS = 'http://www.w3.org/2000/svg';
 const mix = (a, b, k) => a + (b - a) * k, ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 const B = {iri:.85,swirl:14,rimW:2.5,fog:.03,band:.2,scale:1,bob:6,bobSpd:1,yOff:0,xDrift:6,rate:.35,lvl:.62,slosh:6,liqSpd:1.4,tiltLiq:0,eS:1,eOp:.95,halo:1,top:0,bot:0,happy:0,closed:0,gx:0,gy:0,glance:0,think:0,blink:1,dbl:0};
 const S = {
-  flotando:{...B,label:'Disparador: uso equilibrado'},
-  empanada:{...B,iri:.2,swirl:2,rimW:2,fog:.15,band:.05,scale:.98,bob:2,bobSpd:.45,yOff:14,xDrift:2,rate:0,lvl:.58,slosh:1.5,liqSpd:.4,eOp:.62,halo:.4,top:.5,label:'Disparador: racha larga de uso continuo'},
-  iridiscente:{...B,iri:1,swirl:55,rimW:3.5,band:.4,scale:1.06,bob:9,bobSpd:1.7,yOff:-6,xDrift:10,rate:1.8,lvl:.66,slosh:11,liqSpd:2.6,happy:1,blink:0,label:'Disparador: actividad offline completada'},
-  curiosa:{...B,swirl:20,band:.22,scale:1.12,bob:4,bobSpd:1.1,yOff:4,xDrift:3,rate:.3,tiltLiq:18,eS:1.3,gx:3,gy:-2,glance:1,dbl:1,label:'Disparador: aprende un interés nuevo · ojos 1.3× y cada parpadeo es doble'},
-  dormida:{...B,iri:.4,swirl:4,rimW:2,fog:.05,band:.08,scale:.86,bob:3,bobSpd:.35,yOff:18,xDrift:2,rate:.12,lvl:.58,slosh:1.5,liqSpd:.35,halo:0,top:.5,bot:.5,closed:1,blink:0,label:'Disparador: noche o Focus mode'},
-  pensando:{...B,swirl:26,band:.28,bob:4,bobSpd:.8,xDrift:2,rate:.5,think:1,label:'Disparador: genera una respuesta en el chat (la coreografía se repite)'}
+  flotando:{...B,label:'Trigger: balanced phone usage'},
+  empanada:{...B,iri:.2,swirl:2,rimW:2,fog:.15,band:.05,scale:.98,bob:2,bobSpd:.45,yOff:14,xDrift:2,rate:0,lvl:.58,slosh:1.5,liqSpd:.4,eOp:.62,halo:.4,top:.5,label:'Trigger: extended continuous screen time session'},
+  iridiscente:{...B,iri:1,swirl:55,rimW:3.5,band:.4,scale:1.06,bob:9,bobSpd:1.7,yOff:-6,xDrift:10,rate:1.8,lvl:.66,slosh:11,liqSpd:2.6,happy:1,blink:0,label:'Trigger: offline activity completed'},
+  curiosa:{...B,swirl:20,band:.22,scale:1.12,bob:4,bobSpd:1.1,yOff:4,xDrift:3,rate:.3,tiltLiq:18,eS:1.3,gx:3,gy:-2,glance:1,dbl:1,label:'Trigger: learns a new interest · 1.3× eyes with double blinks'},
+  dormida:{...B,iri:.4,swirl:4,rimW:2,fog:.05,band:.08,scale:.86,bob:3,bobSpd:.35,yOff:18,xDrift:2,rate:.12,lvl:.58,slosh:1.5,liqSpd:.35,halo:0,top:.5,bot:.5,closed:1,blink:0,label:'Trigger: night time or Focus mode'},
+  pensando:{...B,swirl:26,band:.28,bob:4,bobSpd:.8,xDrift:2,rate:.5,think:1,label:'Trigger: generates on-device chat response (choreography repeats)'}
 };
 const N={L:{top:0,bot:0,s:1},R:{top:0,bot:0,s:1},gx:0,gy:0}, SQ={L:{top:.3,bot:.12,s:1},R:{top:.3,bot:.12,s:1},gx:0,gy:0};
 const RT={L:{top:.42,bot:.18,s:.95},R:{top:0,bot:0,s:1.12},gx:10,gy:-5}, LT={L:{top:0,bot:0,s:1.12},R:{top:.42,bot:.18,s:.95},gx:-10,gy:-5};
 const KF=[[0,N],[.5,SQ],[1.6,SQ],[2.2,RT],[3.4,RT],[4,LT],[5.2,LT],[5.8,N],[6.8,N]], LOOP=6.8, BLINKS=[.75,1.1,2.55,2.9,4.35,4.7];
-const PH=[[.5,'Entrecierra los ojos'],[1.6,'Parpadea dos veces'],[2.2,'Mira a un lado: un ojo abierto, el otro entrecerrado'],[3.4,'Parpadea dos veces'],[4,'Cambia de lado'],[5.2,'Parpadea dos veces'],[5.8,'Vuelve a la posición inicial'],[6.8,'Pausa antes de repetir']];
+const PH=[[.5,'Squints eyes'],[1.6,'Blinks twice'],[2.2,'Looks to the side: one eye open, the other squinting'],[3.4,'Blinks twice'],[4,'Switches sides'],[5.2,'Blinks twice'],[5.8,'Returns to initial rest position'],[6.8,'Pause before repeating']];
 let tgt={...S.flotando}, cur={...S.flotando}, last=performance.now(), t=0, acc=0, ph=0, t0=0, isThink=false, cs='flotando';
 const bubs=[];
 function pose(tc){for(let i=0;i<KF.length-1;i++){const[a,pa]=KF[i],[b,pb]=KF[i+1];if(tc<=b){const k=ease((tc-a)/(b-a));const m=(x,y)=>({top:mix(x.top,y.top,k),bot:mix(x.bot,y.bot,k),s:mix(x.s,y.s,k)});return{L:m(pa.L,pb.L),R:m(pa.R,pb.R),gx:mix(pa.gx,pb.gx,k),gy:mix(pa.gy,pb.gy,k)};}}return N;}
@@ -127,7 +127,7 @@ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
   const dbl=c.dbl>.5,per=dbl?3.6:4.5,bp=t%per,amt=.9*c.blink;let blR=one(bp,amt);if(dbl)blR=Math.min(blR,one(bp-.3,amt));
   const tc=isThink?(t-t0)%LOOP:0,P=pose(tc);let blC=1;for(const b of BLINKS){blC=Math.min(blC,one(tc-b,.92));}
   const th=c.think,bl=mix(blR,blC,th);
-  let ph2='';if(isThink&&th>.5)ph2=(PH.find(p=>tc<=p[0])||PH[PH.length-1])[1];else if(cs==='curiosa'&&dbl&&bp<.5)ph2='Parpadeo doble';
+  let ph2='';if(isThink&&th>.5)ph2=(PH.find(p=>tc<=p[0])||PH[PH.length-1])[1];else if(cs==='curiosa'&&dbl&&bp<.5)ph2='Double blink';
   $('phase').textContent=ph2;
   const rx=.126*R*c.eS,ry=.22*R*c.eS,sp=.23*R,gx=c.gx+c.glance*7*Math.sin(t*.8)+th*P.gx,gy=c.gy+th*P.gy;
   [[$('e1'),$('g1'),cx-sp+gx,P.L],[$('e2'),$('g2'),cx+sp+gx,P.R]].forEach(([e,g,ex,q])=>{const s=mix(1,q.s,th),p={top:mix(c.top,q.top,th),bot:mix(c.bot,q.bot,th),happy:c.happy,closed:c.closed};const r=eye(ex,cy+gy,rx*s,ry*s,p,bl);e.setAttribute('d',r.d);e.setAttribute('fill-opacity',f(c.eOp));g.setAttribute('cx',f(ex));g.setAttribute('cy',f(r.cy));g.setAttribute('rx',f(rx*s+5));g.setAttribute('ry',f(r.h+5));g.setAttribute('fill-opacity',(c.halo*.16).toFixed(3));});
@@ -139,7 +139,7 @@ document.querySelectorAll('#s-btns button').forEach(b=>b.addEventListener('click
 sel('flotando');requestAnimationFrame(frame);
 })();
 
-/* ---------- Reacciones ---------- */
+/* ---------- Reactions ---------- */
 (() => {
 const $ = i => document.getElementById('m-' + i), f = n => n.toFixed(1), NS = 'http://www.w3.org/2000/svg', cx = 320, cy = 170, R = 90;
 let t=0, last=performance.now(), ph=0, tapT=-9, appT=0, celT=-9, byeT=-9, ac=null, happyS=0;
@@ -151,10 +151,10 @@ function eye(ex,ey,rx,ry,happy,bl){const n=16,U=[],L=[];for(let i=0;i<=n;i++){co
 function one(x){return x>=0&&x<.16?1-.9*Math.sin(x/.16*Math.PI):1;}
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
   let sc=1,al=1,dy=0,sx=1,sy=1,happy=0,sw=14,label='';
-  const ka=(t-appT)/.9;if(ka>=0&&ka<1){const e=1-Math.pow(1-ka,3);sc*=.05+.95*e;al*=Math.min(1,ka*2.5);sw+=(1-ka)*140;label='Aparecer: se forma desde un punto, sin rebote';}
-  const kb=(t-byeT)/1.6;if(kb>=0&&kb<1){const e=kb*kb;dy-=80*e;al*=1-e;happy=Math.min(1,kb*5);label='Despedirse: sonríe y se aleja flotando, nunca revienta';}else if(t>=byeT+1.6&&t<appT)al=0;
-  const kc=t-celT;if(kc>=0&&kc<1.9){happy=Math.max(happy,kc<1.6?1:(1.9-kc)/.3);dy-=16*Math.sin(Math.min(1,kc/.55)*Math.PI);sw+=110*(1-kc/1.9);label='Celebrar: salto suave, colores acelerados y lluvia de burbujitas';}
-  const kt=t-tapT;if(kt>=0&&kt<.7){if($('wob').checked){const w=.03*Math.sin(2*Math.PI*6*kt)*Math.exp(-6*kt);sx=1+w;sy=1-w;label='Tocar: plop, doble parpadeo y oscilación del 3 %';}else label='Tocar: plop y doble parpadeo, cuerpo rígido';}
+  const ka=(t-appT)/.9;if(ka>=0&&ka<1){const e=1-Math.pow(1-ka,3);sc*=.05+.95*e;al*=Math.min(1,ka*2.5);sw+=(1-ka)*140;label='Appear: emerges from a single point, without bouncing';}
+  const kb=(t-byeT)/1.6;if(kb>=0&&kb<1){const e=kb*kb;dy-=80*e;al*=1-e;happy=Math.min(1,kb*5);label='Dismiss: smiles and floats away; never bursts';}else if(t>=byeT+1.6&&t<appT)al=0;
+  const kc=t-celT;if(kc>=0&&kc<1.9){happy=Math.max(happy,kc<1.6?1:(1.9-kc)/.3);dy-=16*Math.sin(Math.min(1,kc/.55)*Math.PI);sw+=110*(1-kc/1.9);label='Celebrate: gentle hop, accelerated colors, and micro-bubble shower';}
+  const kt=t-tapT;if(kt>=0&&kt<.7){if($('wob').checked){const w=.03*Math.sin(2*Math.PI*6*kt)*Math.exp(-6*kt);sx=1+w;sy=1-w;label='Tap: plop, double blink, and 3% body oscillation';}else label='Tap: plop and double blink, rigid body';}
   ph+=sw*dt;happyS+=(happy-happyS)*Math.min(1,dt*10);
   const bob=6*Math.sin(t*1.2);
   $('bub').setAttribute('transform',`translate(${cx} ${f(cy+bob+dy)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(${-cx} ${-cy})`);$('bub').setAttribute('opacity',al.toFixed(3));

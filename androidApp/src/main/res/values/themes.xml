@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Bubble es siempre oscura: fondo negro desde el primer frame, sin destello blanco al arrancar. -->
+    <!-- Bubble is always dark: pure black background from frame 1, avoiding white flash on launch. -->
     <style name="Theme.Bubble" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>

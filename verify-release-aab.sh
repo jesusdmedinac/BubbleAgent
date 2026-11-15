@@ -10,20 +10,20 @@ EXPECTED_MIN_SDK="26"
 EXPECTED_SHA256="77:CF:7E:2F:BD:69:CB:E7:F2:03:D1:88:B4:92:3D:5B:39:D8:D6:E6:15:F3:60:78:1D:38:8A:59:C1:FC:C0:5C"
 
 echo "=========================================="
-echo " Validando Android App Bundle (AAB) Release"
+echo " Validating Android App Bundle (AAB) Release"
 echo "=========================================="
 
 if [ ! -f "$AAB_PATH" ]; then
-    echo "❌ Error: No se encontró el archivo AAB en $AAB_PATH"
-    echo "   Ejecuta: ./gradlew :androidApp:bundleRelease"
+    echo "❌ Error: AAB bundle not found at $AAB_PATH"
+    echo "   Run: ./gradlew :androidApp:bundleRelease"
     exit 1
 fi
 
 AAB_SIZE=$(ls -lh "$AAB_PATH" | awk '{print $5}')
 AAB_DATE=$(ls -lh "$AAB_PATH" | awk '{print $6, $7, $8}')
-echo "✅ [1/6] Archivo AAB encontrado ($AAB_SIZE, compilado: $AAB_DATE)"
+echo "✅ [1/6] AAB file found ($AAB_SIZE, built: $AAB_DATE)"
 
-# Inspección de AndroidManifest.xml (Proto XML) dentro de base/manifest/
+# Inspect AndroidManifest.xml (Proto XML) inside base/manifest/
 PARSED_DATA=$(python3 - <<EOF
 import zipfile, sys
 
@@ -65,46 +65,46 @@ eval "$PARSED_DATA"
 
 # 2. Package Name
 if [ "$PACKAGE" = "$EXPECTED_PACKAGE" ]; then
-    echo "✅ [2/6] Package Name correcto: $PACKAGE"
+    echo "✅ [2/6] Package name verified: $PACKAGE"
 else
-    echo "❌ [2/6] Package Name esperado '$EXPECTED_PACKAGE' pero encontrado '$PACKAGE'"
+    echo "❌ [2/6] Expected package '$EXPECTED_PACKAGE' but found '$PACKAGE'"
     exit 1
 fi
 
 # 3. Target SDK (Android 16 / API 36)
 if [ "$TARGET_SDK" = "$EXPECTED_TARGET_SDK" ]; then
-    echo "✅ [3/6] Target SDK coincide: $TARGET_SDK (Android 16)"
+    echo "✅ [3/6] Target SDK matches: $TARGET_SDK (Android 16)"
 else
-    echo "❌ [3/6] Target SDK esperado '$EXPECTED_TARGET_SDK' pero encontrado '$TARGET_SDK'"
+    echo "❌ [3/6] Expected target SDK '$EXPECTED_TARGET_SDK' but found '$TARGET_SDK'"
     exit 1
 fi
 
 # 4. Version Code & Name
 if [ "$VERSION_CODE" = "$EXPECTED_VERSION_CODE" ] && [ "$VERSION_NAME" = "$EXPECTED_VERSION_NAME" ]; then
-    echo "✅ [4/6] Versión correcta: versionCode=$VERSION_CODE, versionName=$VERSION_NAME"
+    echo "✅ [4/6] Version verified: versionCode=$VERSION_CODE, versionName=$VERSION_NAME"
 else
-    echo "❌ [4/6] Versión esperada code=$EXPECTED_VERSION_CODE name=$EXPECTED_VERSION_NAME (encontrado code=$VERSION_CODE name=$VERSION_NAME)"
+    echo "❌ [4/6] Expected code=$EXPECTED_VERSION_CODE name=$EXPECTED_VERSION_NAME (found code=$VERSION_CODE name=$VERSION_NAME)"
     exit 1
 fi
 
 # 5. Min SDK
 if [ "$MIN_SDK" = "$EXPECTED_MIN_SDK" ]; then
-    echo "✅ [5/6] Min SDK verificado: $MIN_SDK"
+    echo "✅ [5/6] Min SDK verified: $MIN_SDK"
 else
-    echo "⚠️  [5/6] Min SDK detectado: $MIN_SDK (esperado: $EXPECTED_MIN_SDK)"
+    echo "⚠️  [5/6] Detected min SDK: $MIN_SDK (expected: $EXPECTED_MIN_SDK)"
 fi
 
-# 6. Certificado y Firma criptográfica
+# 6. Certificate & Cryptographic Signature
 CERT_INFO=$(keytool -printcert -jarfile "$AAB_PATH" 2>/dev/null || true)
 if echo "$CERT_INFO" | grep -q "$EXPECTED_SHA256"; then
-    echo "✅ [6/6] Firma criptográfica verificada (SHA-256 coincide con el keystore de release):"
+    echo "✅ [6/6] Cryptographic signature verified (SHA-256 matches release keystore):"
     echo "       $EXPECTED_SHA256"
 else
-    echo "❌ [6/6] Firma criptográfica no coincide con el keystore esperado!"
-    echo "$CERT_INFO" | grep "SHA256:" || echo "Sin información de firma."
+    echo "❌ [6/6] Cryptographic signature does not match expected keystore!"
+    echo "$CERT_INFO" | grep "SHA256:" || echo "No signature info found."
     exit 1
 fi
 
 echo "=========================================="
-echo " 🎉 ¡EL BUNDLE AAB ESTÁ LISTO PARA GOOGLE PLAY! "
+echo " 🎉 AAB BUNDLE IS READY FOR GOOGLE PLAY! "
 echo "=========================================="
