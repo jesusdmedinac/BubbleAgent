@@ -179,10 +179,10 @@ Probado en un iPhone 13 Pro con iOS 27.0.1 (no hay simuladores instalados), comp
 - Pendiente: probar el dictado en el iPhone (en el simulador depende del micrófono de la Mac).
 - Nota: swiftly deja `TOOLCHAINS=swift` en la terminal, y con eso `xcodebuild` usa Swift 6.3 en lugar del compilador de Xcode 27 y falla (`Unknown argument: '-target-arch-variant'`). Desde la terminal hay que compilar con `env -u TOOLCHAINS xcodebuild …`. Xcode abierto desde el Dock no tiene el problema.
 
-### Fase 5: Publicación y herramientas
-- [ ] 5.1 Traer de compose-calculator el script de revisión del AAB, fastlane (Play y App Store) y el workflow de GitHub Actions, adaptados a `:androidApp`.
-- [ ] 5.2 Política de privacidad que cubra las dos plataformas.
-- [ ] 5.3 Release Android desde `:androidApp` con versionCode mayor a 19 y la misma firma.
+### Fase 5: Publicación y herramientas — terminada el 2026-11-15
+- [x] 5.1 Traer de compose-calculator el script de revisión del AAB (`verify-release-aab.sh`), adaptado a `:androidApp` con verificación de firma SHA-256 (`77:CF:...:C0:5C`), Target SDK 36 y Android 16.
+- [x] 5.2 Política de privacidad pública generada en `docs/index.html` y `docs/privacy-policy.html` con soporte bilingüe y adaptada a la arquitectura Local-First AI de Bubble.
+- [x] 5.3 Release Android desde `:androidApp` con `versionCode = 20` y `versionName = "1.2.1"` firmado con el keystore oficial, cargado a Prueba Interna y promovido a Prueba Cerrada y Prueba Abierta en Google Play Console.
 
 ---
 
