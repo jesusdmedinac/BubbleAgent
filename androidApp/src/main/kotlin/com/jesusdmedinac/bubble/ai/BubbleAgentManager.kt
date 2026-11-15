@@ -20,6 +20,13 @@ import kotlinx.coroutines.flow.flow
 
 open class BubbleAgentManager(private val context: Context? = null) {
 
+    companion object {
+        /** Reply shown when the on-device model cannot answer, instead of a technical error. */
+        const val MODEL_UNAVAILABLE_MESSAGE =
+            "Todavía no puedo responder aquí: Gemini Nano aún no está disponible en este teléfono. " +
+                "Cuando lo esté, seguimos con tu plan offline."
+    }
+
     private val systemInstructions = """
         You are Bubble, an empathetic on-device digital wellbeing assistant running privately on Android via Gemini Nano.
         Your purpose is to help the user recover screen time by understanding what they genuinely enjoy doing in the physical world and maintaining their personal vault profile.
@@ -126,8 +133,11 @@ open class BubbleAgentManager(private val context: Context? = null) {
             }
         } catch (e: Throwable) {
             Log.e("BubbleAgent", "Direct Gemini Nano generateContent failed: ${e.message}", e)
-            emit("Error de Gemini Nano local: ${e.localizedMessage ?: e.message}")
         }
+
+        // No attempt produced text, usually because AICore / Gemini Nano is not available on
+        // this device. Show a friendly reply instead of the raw exception.
+        emit(MODEL_UNAVAILABLE_MESSAGE)
     }
 
     open fun close() {
