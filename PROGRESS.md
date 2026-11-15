@@ -28,5 +28,11 @@
 
 ## Fase 4: Verificación Pre-Vuelo y Políticas de Google Play
 - [x] 4.1 Ejecutar suite completa de tests unitarios (`./gradlew testDebugUnitTest` - 100% pasando).
-- [ ] 4.2 Inspección pre-vuelo del archivo `app-release.aab` generado (versionCode 19, firmado con keystore de release).
-- [ ] 4.3 Checklist de políticas (URL HTTPS de privacidad en Cloudflare Pages, declaración `PACKAGE_USAGE_STATS`, formulario Data Safety y declaración de salud).
+- [x] 4.2 Inspección pre-vuelo del archivo `androidApp-release.aab` generado (versionCode 19, versionName "1.2.0", targetSdk 36, firmado con keystore oficial y SHA-256 verificado `77:CF:...:C0:5C` mediante `verify-release-aab.sh`).
+- [x] 4.3 Checklist de políticas y privacidad:
+  - Documento de privacidad creado en `docs/index.html` y `docs/privacy-policy.html` enfocado en Local-First AI, cero telemetría externa, exclusión de copias en nube de `bubble.db` y no recolección de ID de publicidad.
+  - Respuestas oficiales para Google Play Console preparadas:
+    - Declaración de ID de publicidad: "No".
+    - Apps de salud: "No, mi app no es una app de salud ni ofrece funciones relacionadas con la salud".
+    - Seguridad de los datos (Data Safety): No recopila ni comparte datos con terceros (100% on-device).
+    - Permiso `PACKAGE_USAGE_STATS`: Uso exclusivo local mediante `UsageStatsManager` para cálculo de tiempo en pantalla vs. potencial offline.
