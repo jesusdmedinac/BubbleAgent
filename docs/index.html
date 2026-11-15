@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviso de Privacidad - Bubble</title>
+    <meta name="description" content="Aviso de Privacidad y Política de Tratamiento de Datos de la aplicación Bubble (com.jesusdmedinac.bubble).">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #14161d;
+            --text-color: #c5c6c7;
+            --text-heading: #ffffff;
+            --primary-color: #66fcf1;
+            --primary-dim: #45a29e;
+            --border-color: #232733;
+            --accent-bg: #1f2833;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-color: #f7f9fc;
+                --card-bg: #ffffff;
+                --text-color: #2d3748;
+                --text-heading: #1a202c;
+                --primary-color: #0d9488;
+                --primary-dim: #0f766e;
+                --border-color: #e2e8f0;
+                --accent-bg: #edf2f7;
+            }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+        }
+        h1 {
+            color: var(--text-heading);
+            font-size: 2rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            color: var(--text-heading);
+            font-size: 1.35rem;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.4rem;
+        }
+        .badge {
+            display: inline-block;
+            background-color: var(--accent-bg);
+            color: var(--primary-color);
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+        .highlight-box {
+            background-color: var(--accent-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            color: var(--text-heading);
+        }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        footer {
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.25rem;
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aviso de Privacidad y Tratamiento de Datos</h1>
+        <div class="badge">
+            Bubble (com.jesusdmedinac.bubble) &bull; Versión 1.2.0 &bull; Actualizado: 15 de noviembre de 2026
+        </div>
+
+        <p>El presente Aviso de Privacidad establece los términos y condiciones bajo los cuales <strong>Bubble</strong> (&ldquo;la Aplicación&rdquo;), desarrollada y distribuida de forma independiente por <strong>Jesús Daniel Medina Cruz</strong>, protege y garantiza la privacidad absoluta de los datos de sus usuarios.</p>
+
+        <div class="highlight-box">
+            <strong>Compromiso Fundamental de Privacidad:</strong><br>
+            Bubble es una aplicación diseñada bajo la filosofía <em>Local-First / On-Device AI</em>. Toda la información, conversaciones, intereses de vida offline, registros de tiempo en pantalla y procesamiento con modelos de inteligencia artificial se ejecutan única y exclusivamente en el hardware de tu dispositivo. <strong>No existe recolección externa, servidores de telemetría ni transmisión de datos personales a terceros.</strong>
+        </div>
+
+        <h2>1. Procesamiento y Almacenamiento Local (Local-First AI)</h2>
+        <ul>
+            <li><strong>Inteligencia Artificial en el Dispositivo (On-Device):</strong> La asistencia conversacional y el análisis de intereses se ejecutan localmente mediante el sistema de inteligencia en el dispositivo (Gemini Nano / AICore en Android y motores locales compatibles). Tus mensajes y reflexiones no se envían a la nube para entrenamiento ni inferencia remota.</li>
+            <li><strong>Persistencia Cifrada Local:</strong> La base de datos SQLite de la aplicación (<code>bubble.db</code>), que almacena el historial de conversaciones y el Vault de memorias, reside exclusivamente en el almacenamiento protegido de la aplicación en el dispositivo del usuario.</li>
+            <li><strong>Protección contra Respaldos en Nube no Autorizados:</strong> La aplicación implementa directivas estrictas (<code>data_extraction_rules.xml</code> y <code>backup_rules.xml</code>) para excluir la base de datos de chats y Vault de las copias de seguridad automáticas en servicios en la nube de Google Drive o terceros.</li>
+        </ul>
+
+        <h2>2. Permisos del Dispositivo y Uso de PACKAGE_USAGE_STATS</h2>
+        <p>Para cumplir su propósito de bienestar digital y ayuda contra el scroll infinito, Bubble solicita un único permiso especial del sistema:</p>
+        <ul>
+            <li><strong>Acceso a Estadísticas de Uso (<code>android.permission.PACKAGE_USAGE_STATS</code>):</strong> Este permiso se utiliza estrictamente en el dispositivo mediante <code>UsageStatsManager</code> para calcular el tiempo total de pantalla del día actual, identificar rachas de uso continuo y mostrar al usuario cuánto tiempo de vida real puede recuperar.</li>
+            <li><strong>Cero Transmisión:</strong> Ninguna métrica de uso, aplicaciones instaladas, nombres de paquetes o tiempos de pantalla es jamás transmitida fuera del teléfono ni compartida con servidores externos.</li>
+            <li><strong>Modo Demo / Sin Permiso:</strong> Si el usuario decide no conceder este permiso, la aplicación funciona de forma autónoma con datos de demostración o registros manuales sin degradar la funcionalidad principal del asistente.</li>
+        </ul>
+
+        <h2>3. Ausencia de Publicidad e ID de Publicidad (Advertising ID)</h2>
+        <ul>
+            <li>Bubble <strong>no contiene anuncios publicitarios</strong> de ninguna red externa.</li>
+            <li>La aplicación no solicita ni utiliza el permiso <code>com.google.android.gms.permission.AD_ID</code> ni registra identificadores publicitarios (AAID).</li>
+            <li>No se realiza ningún tipo de rastreo de comportamiento entre aplicaciones ni creación de perfiles comerciales.</li>
+        </ul>
+
+        <h2>4. Declaración sobre Salud y Bienestar</h2>
+        <p>Bubble es una herramienta orientada al <strong>bienestar digital, organización personal y productividad</strong>:</p>
+        <ul>
+            <li>La aplicación <strong>no es un dispositivo médico</strong> ni proporciona diagnósticos clínicos, tratamientos o asesoramiento médico.</li>
+            <li>No recopila ni monitoriza signos vitales, registros de salud médica, frecuencia cardíaca ni información de sensores biomédicos.</li>
+        </ul>
+
+        <h2>5. Privacidad de Menores (COPPA y GDPR)</h2>
+        <p>Al no recopilar, transmitir ni almacenar datos personales en servidores externos, Bubble cumple rigurosamente con los estándares internacionales de protección de la privacidad infantil (COPPA y GDPR). La aplicación puede ser utilizada con total seguridad por personas de todas las edades.</p>
+
+        <h2>6. Derechos ARCO y Control del Usuario</h2>
+        <p>El usuario mantiene en todo momento el control soberano sobre su información:</p>
+        <ul>
+            <li><strong>Eliminación Inmediata:</strong> El usuario puede borrar mensajes individuales, memorias del Vault o limpiar el almacenamiento completo de la aplicación desde la configuración de su dispositivo, eliminando permanentemente cualquier dato residual.</li>
+        </ul>
+
+        <h2>7. Contacto y Consultas</h2>
+        <p>Para cualquier duda, aclaración o sugerencia sobre este aviso de privacidad o las políticas de seguridad de Bubble, puedes contactar directamente al desarrollador:</p>
+        <ul>
+            <li><strong>Desarrollador:</strong> Jesús Daniel Medina Cruz</li>
+            <li><strong>Correo Electrónico:</strong> <a href="mailto:jesus.daniel.medina.cruz@gmail.com">jesus.daniel.medina.cruz@gmail.com</a></li>
+            <li><strong>Repositorio Oficial:</strong> <a href="https://github.com/jesusdmedinac/BubbleAgent" target="_blank" rel="noopener noreferrer">https://github.com/jesusdmedinac/BubbleAgent</a></li>
+        </ul>
+
+        <footer>
+            &copy; 2026 Jesús Daniel Medina Cruz &bull; Todos los derechos reservados.
+        </footer>
+    </div>
+</body>
+</html>
