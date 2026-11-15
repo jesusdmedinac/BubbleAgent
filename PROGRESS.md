@@ -1,7 +1,7 @@
 # Bubble - Plan de Avance y Publicación (`com.jesusdmedinac.bubble`)
 
 ## Fase 1: Compilación, Versión y Firma Criptográfica (Release)
-- [x] 1.1 Incrementar `versionCode = 18` y `versionName = "1.1.0"` en `BubbleAgent/app/build.gradle.kts`. (Actualizado a `versionCode = 19`, `versionName = "1.2.0"` en Fase 3).
+- [x] 1.1 Incrementar `versionCode = 18` y `versionName = "1.1.0"` en `BubbleAgent/app/build.gradle.kts`. (Actualizado a `versionCode = 20`, `versionName = "1.2.1"` para lanzamiento en Google Play).
 - [x] 1.2 Ajustar `targetSdk = 36` (y `compileSdk = 37` por compatibilidad de AppFunctions) para cumplir con las directivas de Google Play 2026.
 - [x] 1.3 Configurar `signingConfigs.release` en `BubbleAgent/app/build.gradle.kts` con `bubble-keystore`.
 - [x] 1.4 Crear `BubbleAgent/app/proguard-rules.pro` con reglas R8 para Compose, SQLDelight, Koog, AppFunctions y Serialization.
@@ -28,7 +28,7 @@
 
 ## Fase 4: Verificación Pre-Vuelo y Políticas de Google Play
 - [x] 4.1 Ejecutar suite completa de tests unitarios (`./gradlew testDebugUnitTest` - 100% pasando).
-- [x] 4.2 Inspección pre-vuelo del archivo `androidApp-release.aab` generado (versionCode 19, versionName "1.2.0", targetSdk 36, firmado con keystore oficial y SHA-256 verificado `77:CF:...:C0:5C` mediante `verify-release-aab.sh`).
+- [x] 4.2 Inspección pre-vuelo del archivo `androidApp-release.aab` generado (versionCode 20, versionName "1.2.1", targetSdk 36, firmado con keystore oficial y SHA-256 verificado `77:CF:...:C0:5C` mediante `verify-release-aab.sh`).
 - [x] 4.3 Checklist de políticas y privacidad:
   - Documento de privacidad creado en `docs/index.html` y `docs/privacy-policy.html` enfocado en Local-First AI, cero telemetría externa, exclusión de copias en nube de `bubble.db` y no recolección de ID de publicidad.
   - Respuestas oficiales para Google Play Console preparadas:
