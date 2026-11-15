@@ -14,6 +14,7 @@ Estado de partida (2026-11-03, `kmp describe`): Gradle, Kotlin 2.3.20, AGP 9.1.0
 | D2 | Motor de IA en iOS (Gemini Nano no existe ahí) | Interfaz común `BubbleAiEngine`. En iOS empieza con `MockAiEngine` y después Apple Foundation Models |
 | D3 | Tiempo en pantalla en iOS (FamilyControls/DeviceActivity no deja leer métricas libremente) | Interfaz común `ScreenTimeSource`. En iOS, por ahora, el modo demo o un registro manual |
 | D4 | Si el release 1.2.0 de Android sale antes o después de migrar | **Antes**: publicar 1.2.0 desde `:app` y migrar en una rama |
+| D5 | Soporte de versiones Android (minSdk 26 vs minSdk 29+) | **Decidido (2026-11-15):** Estrategia en dos tiempos. Para v1.2.1 (20) se mantiene `minSdk = 26` con código defensivo para no alterar el bundle ya en revisión en Google Play. Para v2.0 (Mascota Viva en Canvas) se elevará `minSdk` a 29 (o 31) para eliminar deuda legacy. |
 
 ---
 

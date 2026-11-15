@@ -17,14 +17,13 @@ class MainScreenTest {
     @Before
     fun setup() {
         val appContainer = (composeTestRule.activity.application as BubbleApplication).appContainer
+        val viewModel = MainScreenViewModel(
+            aiEngine = MockAiEngine(),
+            repository = appContainer.bubbleRepository,
+            screenTimeSource = appContainer.screenTimeSource
+        )
         composeTestRule.setContent {
-            MainScreen(
-                viewModel = MainScreenViewModel(
-                    aiEngine = MockAiEngine(),
-                    repository = appContainer.bubbleRepository,
-                    screenTimeSource = appContainer.screenTimeSource
-                )
-            )
+            MainScreen(viewModel = viewModel)
         }
     }
 
