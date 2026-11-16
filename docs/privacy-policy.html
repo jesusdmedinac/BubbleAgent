@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Bubble</title>
+    <meta name="description" content="Privacy Policy and Data Processing Notice for the Bubble application (com.jesusdmedinac.bubble).">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #14161d;
+            --text-color: #c5c6c7;
+            --text-heading: #ffffff;
+            --primary-color: #66fcf1;
+            --primary-dim: #45a29e;
+            --border-color: #232733;
+            --accent-bg: #1f2833;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-color: #f7f9fc;
+                --card-bg: #ffffff;
+                --text-color: #2d3748;
+                --text-heading: #1a202c;
+                --primary-color: #0d9488;
+                --primary-dim: #0f766e;
+                --border-color: #e2e8f0;
+                --accent-bg: #edf2f7;
+            }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+        }
+        h1 {
+            color: var(--text-heading);
+            font-size: 2rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            color: var(--text-heading);
+            font-size: 1.35rem;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.4rem;
+        }
+        .badge {
+            display: inline-block;
+            background-color: var(--accent-bg);
+            color: var(--primary-color);
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+        .highlight-box {
+            background-color: var(--accent-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            color: var(--text-heading);
+        }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        footer {
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.25rem;
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy &amp; Data Notice</h1>
+        <div class="badge">
+            Bubble (com.jesusdmedinac.bubble) &bull; Version 1.2.1 &bull; Updated: November 15, 2026
+        </div>
+
+        <p>This Privacy Policy outlines the terms and conditions under which <strong>Bubble</strong> (&ldquo;the Application&rdquo;), developed and published independently by <strong>Jesús Daniel Medina Cruz</strong>, protects and guarantees the confidentiality of user data.</p>
+
+        <div class="highlight-box">
+            <strong>Core Privacy Commitment:</strong><br>
+            Bubble is built from the ground up on the <em>Local-First / On-Device AI</em> philosophy. All conversations, offline life goals, screen time tracking, and artificial intelligence inference run solely on your local device hardware. <strong>There is no remote telemetry, external tracking servers, or data sharing with third parties.</strong>
+        </div>
+
+        <h2>1. Local-First Architecture &amp; On-Device Processing</h2>
+        <ul>
+            <li><strong>On-Device Artificial Intelligence:</strong> Conversational assistance and offline interest profiling run locally using on-device machine learning hardware (Gemini Nano / AICore on Android and compatible native on-device engines). Your prompts, messages, and reflections are never uploaded to remote servers for model training or cloud inference.</li>
+            <li><strong>Encrypted Local Storage:</strong> The application's SQLite database (<code>bubble.db</code>), which stores conversation history and personal vault memories, resides exclusively within the application's private, sandboxed sandbox on the user's physical device.</li>
+            <li><strong>Protection Against Unauthorized Cloud Backups:</strong> The application enforces strict backup rules (<code>data_extraction_rules.xml</code> and <code>backup_rules.xml</code>) to explicitly exclude the chats and vault database from automatic cloud backups to Google Drive or other third-party cloud services.</li>
+        </ul>
+
+        <h2>2. Device Permissions &amp; PACKAGE_USAGE_STATS</h2>
+        <p>To fulfill its digital wellbeing purpose and counter compulsive screen scrolling, Bubble requests access to system usage metrics:</p>
+        <ul>
+            <li><strong>Usage Stats Permission (<code>android.permission.PACKAGE_USAGE_STATS</code>):</strong> This permission is queried strictly on-device through Android's <code>UsageStatsManager</code> to compute daily screen time totals, detect continuous screen time sessions, and calculate offline recovery opportunities.</li>
+            <li><strong>Zero Remote Transmission:</strong> No app usage statistics, package identifiers, or screen time metrics ever leave the phone or transmit over external network connections.</li>
+            <li><strong>Demo / Non-Permission Mode:</strong> If you decline to grant this permission, Bubble gracefully falls back to demo data or manual logging without degrading core assistant features.</li>
+        </ul>
+
+        <h2>3. Zero Advertising &amp; Advertising ID (AD_ID)</h2>
+        <ul>
+            <li>Bubble <strong>contains no advertisements</strong> from any advertising network.</li>
+            <li>The application does not request or use the <code>com.google.android.gms.permission.AD_ID</code> permission and does not track Google Advertising Identifiers (AAID).</li>
+            <li>No cross-app behavioral tracking or profiling is conducted.</li>
+        </ul>
+
+        <h2>4. Health &amp; Wellbeing Declaration</h2>
+        <p>Bubble is a digital productivity, habit formation, and lifestyle balance tool:</p>
+        <ul>
+            <li>The application <strong>is not a medical device</strong> and does not provide clinical diagnoses, treatments, or medical advice.</li>
+            <li>It does not record, track, or process vital signs, medical records, heart rate, or biometric sensor telemetry.</li>
+        </ul>
+
+        <h2>5. Children's Privacy (COPPA &amp; GDPR)</h2>
+        <p>Because Bubble does not collect, transmit, or store personal information on remote servers, it fully complies with global child privacy standards, including COPPA and GDPR. The app can be safely used by users of all ages.</p>
+
+        <h2>6. User Control &amp; Data Deletion</h2>
+        <p>You retain complete ownership and control over your data at all times:</p>
+        <ul>
+            <li><strong>Immediate Local Deletion:</strong> You can delete individual chat messages, wipe vault memories, or clear the app's local storage directly via your operating system settings to permanently erase all locally stored data.</li>
+        </ul>
+
+        <h2>7. Contact &amp; Inquiries</h2>
+        <p>For questions, feedback, or inquiries regarding this Privacy Policy, please contact the developer directly:</p>
+        <ul>
+            <li><strong>Developer:</strong> Jesús Daniel Medina Cruz</li>
+            <li><strong>Email:</strong> <a href="mailto:jesus.daniel.medina.cruz@gmail.com">jesus.daniel.medina.cruz@gmail.com</a></li>
+            <li><strong>Official Repository:</strong> <a href="https://github.com/jesusdmedinac/BubbleAgent" target="_blank" rel="noopener noreferrer">https://github.com/jesusdmedinac/BubbleAgent</a></li>
+        </ul>
+
+        <footer>
+            &copy; 2026 Jesús Daniel Medina Cruz &bull; All rights reserved.
+        </footer>
+    </div>
+</body>
+</html>

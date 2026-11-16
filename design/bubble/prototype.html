@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bubble · Prototype</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0B0B0D; color: #D3D1C7; font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; color: #F4FAFD; }
+  h2 { font-size: 17px; font-weight: 500; margin: 40px 0 12px; color: #F4FAFD; }
+  p.lead { margin: 0; color: #888780; }
+  .stage { background: #121216; border-radius: 16px; overflow: hidden; }
+  .stage svg { display: block; width: 100%; height: auto; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  button { font: inherit; font-size: 14px; color: #D3D1C7; background: transparent; border: 1px solid #444441; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { background: #1C1C20; }
+  button[aria-pressed="true"] { border-color: #85B7EB; color: #B5D4F4; }
+  label { font-size: 13px; color: #B4B2A9; display: flex; align-items: center; gap: 6px; }
+  .note { font-size: 13px; color: #B4B2A9; margin: 10px 0 0; min-height: 20px; }
+  .phase { font-size: 13px; color: #888780; margin: 4px 0 0; min-height: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bubble</h1>
+  <p class="lead">States &amp; reactions prototype. Values from <code>states.json</code> and <code>reactions.json</code>.</p>
+
+  <h2>States</h2>
+  <div class="stage">
+    <svg viewBox="0 0 640 320" role="img" aria-label="Bubble in various emotional states">
+      <defs>
+        <linearGradient id="s-iri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7F77DD"/><stop offset="0.2" stop-color="#D4537E"/><stop offset="0.4" stop-color="#EF9F27"/><stop offset="0.55" stop-color="#FAC775"/><stop offset="0.7" stop-color="#97C459"/><stop offset="0.85" stop-color="#5DCAA5"/><stop offset="1" stop-color="#85B7EB"/></linearGradient>
+        <clipPath id="s-clip"><circle id="s-clipC"/></clipPath>
+      </defs>
+      <g id="s-bg"></g>
+      <circle id="s-body" fill="#E6F1FB" fill-opacity="0.03"/>
+      <g clip-path="url(#s-clip)"><path id="s-liq" fill="#B5D4F4" fill-opacity="0.13"/></g>
+      <circle id="s-sw1" fill="none" stroke="url(#s-iri)" stroke-width="3" pathLength="100" stroke-dasharray="18 82" stroke-linecap="round"/>
+      <circle id="s-sw2" fill="none" stroke="url(#s-iri)" stroke-width="2" pathLength="100" stroke-dasharray="11 89" stroke-linecap="round"/>
+      <circle id="s-rim" fill="none" stroke="url(#s-iri)" stroke-width="2.5"/>
+      <circle id="s-rimT" fill="none" stroke="url(#s-iri)" stroke-width="7" stroke-linecap="round" pathLength="100" stroke-dasharray="24 76" stroke-dashoffset="-2"/>
+      <path id="s-hl" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+      <circle id="s-dot" r="3" fill="#FFFFFF" fill-opacity="0.7"/>
+      <ellipse id="s-g1" fill="#B5D4F4"/><ellipse id="s-g2" fill="#B5D4F4"/>
+      <path id="s-e1" fill="#F4FAFD"/><path id="s-e2" fill="#F4FAFD"/>
+    </svg>
+  </div>
+  <div class="row" id="s-btns">
+    <button data-s="flotando">Floating</button><button data-s="empanada">Foggy</button><button data-s="iridiscente">Iridescent</button><button data-s="curiosa">Curious</button><button data-s="dormida">Asleep</button><button data-s="pensando">Thinking</button>
+  </div>
+  <p class="note" id="s-lab"></p>
+  <p class="phase" id="s-phase"></p>
+
+  <h2>Reactions</h2>
+  <div class="stage" id="m-stage" style="cursor:pointer">
+    <svg viewBox="0 0 640 320" role="img" aria-label="Interactive Bubble, tap it">
+      <defs>
+        <linearGradient id="m-iri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7F77DD"/><stop offset="0.2" stop-color="#D4537E"/><stop offset="0.4" stop-color="#EF9F27"/><stop offset="0.55" stop-color="#FAC775"/><stop offset="0.7" stop-color="#97C459"/><stop offset="0.85" stop-color="#5DCAA5"/><stop offset="1" stop-color="#85B7EB"/></linearGradient>
+        <clipPath id="m-clip"><circle cx="320" cy="170" r="90"/></clipPath>
+      </defs>
+      <g id="m-bg"></g>
+      <g id="m-bub">
+        <circle cx="320" cy="170" r="90" fill="#E6F1FB" fill-opacity="0.03"/>
+        <g clip-path="url(#m-clip)"><path id="m-liq" fill="#B5D4F4" fill-opacity="0.13"/></g>
+        <circle id="m-sw1" cx="320" cy="170" r="77" fill="none" stroke="url(#m-iri)" stroke-width="3" stroke-opacity="0.2" pathLength="100" stroke-dasharray="18 82" stroke-linecap="round"/>
+        <circle id="m-sw2" cx="320" cy="170" r="65" fill="none" stroke="url(#m-iri)" stroke-width="2" stroke-opacity="0.16" pathLength="100" stroke-dasharray="11 89" stroke-linecap="round"/>
+        <circle cx="320" cy="170" r="90" fill="none" stroke="url(#m-iri)" stroke-width="2.5"/>
+        <circle cx="320" cy="170" r="90" fill="none" stroke="url(#m-iri)" stroke-width="7" stroke-opacity="0.45" stroke-linecap="round" pathLength="100" stroke-dasharray="24 76" stroke-dashoffset="-2"/>
+        <path d="M252.3 145.4 A72 72 0 0 1 289.6 104.7" fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="373.8" cy="215.1" r="3" fill="#FFFFFF" fill-opacity="0.7"/>
+        <ellipse cx="299.3" cy="170" rx="16.3" ry="24.8" fill="#B5D4F4" fill-opacity="0.16"/><ellipse cx="340.7" cy="170" rx="16.3" ry="24.8" fill="#B5D4F4" fill-opacity="0.16"/>
+        <path id="m-e1" fill="#F4FAFD"/><path id="m-e2" fill="#F4FAFD"/>
+      </g>
+    </svg>
+  </div>
+  <div class="row">
+    <button id="m-tap">Tap</button><button id="m-app">Appear</button><button id="m-cel">Celebrate</button><button id="m-bye">Dismiss</button>
+    <label><input type="checkbox" id="m-wob" checked> 3% touch oscillation</label>
+    <label><input type="checkbox" id="m-snd" checked> Sound</label>
+  </div>
+  <p class="note" id="m-lab"></p>
+</main>
+
+<script>
+/* ---------- States ---------- */
+(() => {
+const $ = i => document.getElementById('s-' + i), f = n => n.toFixed(1), NS = 'http://www.w3.org/2000/svg';
+const mix = (a, b, k) => a + (b - a) * k, ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+const B = {iri:.85,swirl:14,rimW:2.5,fog:.03,band:.2,scale:1,bob:6,bobSpd:1,yOff:0,xDrift:6,rate:.35,lvl:.62,slosh:6,liqSpd:1.4,tiltLiq:0,eS:1,eOp:.95,halo:1,top:0,bot:0,happy:0,closed:0,gx:0,gy:0,glance:0,think:0,blink:1,dbl:0};
+const S = {
+  flotando:{...B,label:'Trigger: balanced phone usage'},
+  empanada:{...B,iri:.2,swirl:2,rimW:2,fog:.15,band:.05,scale:.98,bob:2,bobSpd:.45,yOff:14,xDrift:2,rate:0,lvl:.58,slosh:1.5,liqSpd:.4,eOp:.62,halo:.4,top:.5,label:'Trigger: extended continuous screen time session'},
+  iridiscente:{...B,iri:1,swirl:55,rimW:3.5,band:.4,scale:1.06,bob:9,bobSpd:1.7,yOff:-6,xDrift:10,rate:1.8,lvl:.66,slosh:11,liqSpd:2.6,happy:1,blink:0,label:'Trigger: offline activity completed'},
+  curiosa:{...B,swirl:20,band:.22,scale:1.12,bob:4,bobSpd:1.1,yOff:4,xDrift:3,rate:.3,tiltLiq:18,eS:1.3,gx:3,gy:-2,glance:1,dbl:1,label:'Trigger: learns a new interest · 1.3× eyes with double blinks'},
+  dormida:{...B,iri:.4,swirl:4,rimW:2,fog:.05,band:.08,scale:.86,bob:3,bobSpd:.35,yOff:18,xDrift:2,rate:.12,lvl:.58,slosh:1.5,liqSpd:.35,halo:0,top:.5,bot:.5,closed:1,blink:0,label:'Trigger: night time or Focus mode'},
+  pensando:{...B,swirl:26,band:.28,bob:4,bobSpd:.8,xDrift:2,rate:.5,think:1,label:'Trigger: generates on-device chat response (choreography repeats)'}
+};
+const N={L:{top:0,bot:0,s:1},R:{top:0,bot:0,s:1},gx:0,gy:0}, SQ={L:{top:.3,bot:.12,s:1},R:{top:.3,bot:.12,s:1},gx:0,gy:0};
+const RT={L:{top:.42,bot:.18,s:.95},R:{top:0,bot:0,s:1.12},gx:10,gy:-5}, LT={L:{top:0,bot:0,s:1.12},R:{top:.42,bot:.18,s:.95},gx:-10,gy:-5};
+const KF=[[0,N],[.5,SQ],[1.6,SQ],[2.2,RT],[3.4,RT],[4,LT],[5.2,LT],[5.8,N],[6.8,N]], LOOP=6.8, BLINKS=[.75,1.1,2.55,2.9,4.35,4.7];
+const PH=[[.5,'Squints eyes'],[1.6,'Blinks twice'],[2.2,'Looks to the side: one eye open, the other squinting'],[3.4,'Blinks twice'],[4,'Switches sides'],[5.2,'Blinks twice'],[5.8,'Returns to initial rest position'],[6.8,'Pause before repeating']];
+let tgt={...S.flotando}, cur={...S.flotando}, last=performance.now(), t=0, acc=0, ph=0, t0=0, isThink=false, cs='flotando';
+const bubs=[];
+function pose(tc){for(let i=0;i<KF.length-1;i++){const[a,pa]=KF[i],[b,pb]=KF[i+1];if(tc<=b){const k=ease((tc-a)/(b-a));const m=(x,y)=>({top:mix(x.top,y.top,k),bot:mix(x.bot,y.bot,k),s:mix(x.s,y.s,k)});return{L:m(pa.L,pb.L),R:m(pa.R,pb.R),gx:mix(pa.gx,pb.gx,k),gy:mix(pa.gy,pb.gy,k)};}}return N;}
+function pt(cx,cy,r,deg){const a=deg*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+function eye(ex,ey,rx,ry,p,bl){const n=16,U=[],L=[],topY=ey-ry+2*ry*p.top,botY=ey+ry-2*ry*p.bot;let mn=1e9,mx=-1e9;
+  for(let i=0;i<=n;i++){const x=ex-rx+2*rx*i/n,dx=(x-ex)/rx,s=Math.sqrt(Math.max(0,1-dx*dx));let u=ey-ry*s*bl,l=ey+ry*s*bl;const lh=ey+ry*.35-ry*.75*s;l=l*(1-p.happy)+lh*p.happy;u=Math.max(u,topY);l=Math.min(l,botY);const sag=p.closed*ry*.3*s;u+=sag;l+=sag;const mt=1.2+p.closed*1.4;if(l<u+mt){const m=(u+l)/2;u=m-mt/2;l=m+mt/2;}U.push([x,u]);L.push([x,l]);mn=Math.min(mn,u);mx=Math.max(mx,l);}
+  return{d:'M'+U.map(q=>f(q[0])+' '+f(q[1])).join(' L')+' L'+L.reverse().map(q=>f(q[0])+' '+f(q[1])).join(' L')+'Z',cy:(mn+mx)/2,h:(mx-mn)/2};}
+function one(x,amt){return x>=0&&x<.16?1-amt*Math.sin(x/.16*Math.PI):1;}
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
+  for(const k in tgt){if(typeof tgt[k]==='number')cur[k]+=(tgt[k]-cur[k])*Math.min(1,dt*2.4);}
+  const c=cur;ph+=c.swirl*dt;
+  const cx=320+c.xDrift*Math.sin(t*.37),cy=160+c.yOff+c.bob*Math.sin(t*c.bobSpd*1.2),R=92*c.scale;
+  ['body','clipC','rim','rimT','sw1','sw2'].forEach(i=>{$(i).setAttribute('cx',f(cx));$(i).setAttribute('cy',f(cy));});
+  ['body','clipC','rim','rimT'].forEach(i=>$(i).setAttribute('r',f(R)));
+  $('sw1').setAttribute('r',f(R*.86));$('sw2').setAttribute('r',f(R*.72));
+  $('sw1').setAttribute('transform',`rotate(${f(ph*1.3)} ${f(cx)} ${f(cy)})`);$('sw2').setAttribute('transform',`rotate(${f(-ph*.8+140)} ${f(cx)} ${f(cy)})`);
+  $('sw1').setAttribute('stroke-opacity',f(c.band));$('sw2').setAttribute('stroke-opacity',f(c.band*.8));
+  $('iri').setAttribute('gradientTransform',`rotate(${f(ph)} .5 .5)`);
+  $('body').setAttribute('fill-opacity',c.fog);$('rim').setAttribute('stroke-opacity',Math.max(.2,c.iri));$('rim').setAttribute('stroke-width',c.rimW);$('rimT').setAttribute('stroke-opacity',.5*c.iri);
+  const yl=cy-R+2*R*c.lvl;let ld='';for(let x=cx-R-10;x<=cx+R+10;x+=8){const y=yl+c.slosh*Math.sin(x*.03+t*c.liqSpd)-(x-cx)*c.tiltLiq/R;ld+=(ld?'L':'M')+f(x)+' '+f(y)+' ';}
+  $('liq').setAttribute('d',ld+`L${f(cx+R+10)} ${f(cy+R+10)} L${f(cx-R-10)} ${f(cy+R+10)}Z`);
+  const a1=pt(cx,cy,.8*R,200),a2=pt(cx,cy,.8*R,245);$('hl').setAttribute('d',`M${f(a1[0])} ${f(a1[1])} A${f(.8*R)} ${f(.8*R)} 0 0 1 ${f(a2[0])} ${f(a2[1])}`);$('hl').setAttribute('stroke-opacity',f(.45+.45*c.iri));
+  const dp=pt(cx,cy,.78*R,40);$('dot').setAttribute('cx',f(dp[0]));$('dot').setAttribute('cy',f(dp[1]));
+  const dbl=c.dbl>.5,per=dbl?3.6:4.5,bp=t%per,amt=.9*c.blink;let blR=one(bp,amt);if(dbl)blR=Math.min(blR,one(bp-.3,amt));
+  const tc=isThink?(t-t0)%LOOP:0,P=pose(tc);let blC=1;for(const b of BLINKS){blC=Math.min(blC,one(tc-b,.92));}
+  const th=c.think,bl=mix(blR,blC,th);
+  let ph2='';if(isThink&&th>.5)ph2=(PH.find(p=>tc<=p[0])||PH[PH.length-1])[1];else if(cs==='curiosa'&&dbl&&bp<.5)ph2='Double blink';
+  $('phase').textContent=ph2;
+  const rx=.126*R*c.eS,ry=.22*R*c.eS,sp=.23*R,gx=c.gx+c.glance*7*Math.sin(t*.8)+th*P.gx,gy=c.gy+th*P.gy;
+  [[$('e1'),$('g1'),cx-sp+gx,P.L],[$('e2'),$('g2'),cx+sp+gx,P.R]].forEach(([e,g,ex,q])=>{const s=mix(1,q.s,th),p={top:mix(c.top,q.top,th),bot:mix(c.bot,q.bot,th),happy:c.happy,closed:c.closed};const r=eye(ex,cy+gy,rx*s,ry*s,p,bl);e.setAttribute('d',r.d);e.setAttribute('fill-opacity',f(c.eOp));g.setAttribute('cx',f(ex));g.setAttribute('cy',f(r.cy));g.setAttribute('rx',f(rx*s+5));g.setAttribute('ry',f(r.h+5));g.setAttribute('fill-opacity',(c.halo*.16).toFixed(3));});
+  acc+=c.rate*dt;while(acc>=1){acc-=1;const el=document.createElementNS(NS,'circle');el.setAttribute('fill','none');el.setAttribute('stroke','url(#s-iri)');el.setAttribute('stroke-width','1');$('bg').appendChild(el);bubs.push({el,x:cx+(Math.random()-.5)*R*1.3,y:cy+R*.6,r:2+Math.random()*5,v:28+Math.random()*30,life:0});}
+  for(let i=bubs.length-1;i>=0;i--){const b=bubs[i];b.life+=dt;b.y-=b.v*dt;if(b.y<15){b.el.remove();bubs.splice(i,1);continue;}b.el.setAttribute('cx',f(b.x+Math.sin(b.life*1.6)*3));b.el.setAttribute('cy',f(b.y));b.el.setAttribute('r',f(b.r));b.el.setAttribute('opacity',f(Math.min(1,b.life*2)*Math.min(1,(b.y-15)/60)));}
+  requestAnimationFrame(frame);}
+function sel(k){cs=k;tgt={...S[k]};isThink=k==='pensando';if(isThink)t0=t;$('lab').textContent=S[k].label;document.querySelectorAll('#s-btns button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===k));}
+document.querySelectorAll('#s-btns button').forEach(b=>b.addEventListener('click',()=>sel(b.dataset.s)));
+sel('flotando');requestAnimationFrame(frame);
+})();
+
+/* ---------- Reactions ---------- */
+(() => {
+const $ = i => document.getElementById('m-' + i), f = n => n.toFixed(1), NS = 'http://www.w3.org/2000/svg', cx = 320, cy = 170, R = 90;
+let t=0, last=performance.now(), ph=0, tapT=-9, appT=0, celT=-9, byeT=-9, ac=null, happyS=0;
+const bubs=[];
+function tone(f0,f1,dur,gain,delay){if(!$('snd').checked)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+(delay||0);o.type='sine';o.frequency.setValueAtTime(f0,s);o.frequency.exponentialRampToValueAtTime(f1,s+dur);g.gain.setValueAtTime(0.0001,s);g.gain.exponentialRampToValueAtTime(gain,s+.008);g.gain.exponentialRampToValueAtTime(0.0001,s+dur);o.connect(g).connect(ac.destination);o.start(s);o.stop(s+dur+.02);}catch(e){}}
+const SND={tap:()=>tone(900,240,.13,.25),app:()=>tone(280,620,.32,.18),cel:()=>{tone(520,700,.14,.18,0);tone(660,880,.14,.18,.12);tone(780,1100,.2,.2,.24);},bye:()=>{tone(620,300,.45,.14,0);tone(500,240,.5,.08,.18);}};
+function spawn(x,y,vx,vy,r){const el=document.createElementNS(NS,'circle');el.setAttribute('fill','none');el.setAttribute('stroke','url(#m-iri)');el.setAttribute('stroke-width','1');$('bg').appendChild(el);bubs.push({el,x,y,vx,vy,r,life:0});}
+function eye(ex,ey,rx,ry,happy,bl){const n=16,U=[],L=[];for(let i=0;i<=n;i++){const x=ex-rx+2*rx*i/n,dx=(x-ex)/rx,s=Math.sqrt(Math.max(0,1-dx*dx));let u=ey-ry*s*bl,l=ey+ry*s*bl;const lh=ey+ry*.35-ry*.75*s;l=l*(1-happy)+lh*happy;if(l<u+1.2){const m=(u+l)/2;u=m-.6;l=m+.6;}U.push([x,u]);L.push([x,l]);}return'M'+U.map(q=>f(q[0])+' '+f(q[1])).join(' L')+' L'+L.reverse().map(q=>f(q[0])+' '+f(q[1])).join(' L')+'Z';}
+function one(x){return x>=0&&x<.16?1-.9*Math.sin(x/.16*Math.PI):1;}
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
+  let sc=1,al=1,dy=0,sx=1,sy=1,happy=0,sw=14,label='';
+  const ka=(t-appT)/.9;if(ka>=0&&ka<1){const e=1-Math.pow(1-ka,3);sc*=.05+.95*e;al*=Math.min(1,ka*2.5);sw+=(1-ka)*140;label='Appear: emerges from a single point, without bouncing';}
+  const kb=(t-byeT)/1.6;if(kb>=0&&kb<1){const e=kb*kb;dy-=80*e;al*=1-e;happy=Math.min(1,kb*5);label='Dismiss: smiles and floats away; never bursts';}else if(t>=byeT+1.6&&t<appT)al=0;
+  const kc=t-celT;if(kc>=0&&kc<1.9){happy=Math.max(happy,kc<1.6?1:(1.9-kc)/.3);dy-=16*Math.sin(Math.min(1,kc/.55)*Math.PI);sw+=110*(1-kc/1.9);label='Celebrate: gentle hop, accelerated colors, and micro-bubble shower';}
+  const kt=t-tapT;if(kt>=0&&kt<.7){if($('wob').checked){const w=.03*Math.sin(2*Math.PI*6*kt)*Math.exp(-6*kt);sx=1+w;sy=1-w;label='Tap: plop, double blink, and 3% body oscillation';}else label='Tap: plop and double blink, rigid body';}
+  ph+=sw*dt;happyS+=(happy-happyS)*Math.min(1,dt*10);
+  const bob=6*Math.sin(t*1.2);
+  $('bub').setAttribute('transform',`translate(${cx} ${f(cy+bob+dy)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(${-cx} ${-cy})`);$('bub').setAttribute('opacity',al.toFixed(3));
+  $('iri').setAttribute('gradientTransform',`rotate(${f(ph)} .5 .5)`);
+  $('sw1').setAttribute('transform',`rotate(${f(ph*1.3)} ${cx} ${cy})`);$('sw2').setAttribute('transform',`rotate(${f(-ph*.8+140)} ${cx} ${cy})`);
+  const yl=cy-R+2*R*.62;let ld='';for(let x=cx-R-10;x<=cx+R+10;x+=8){ld+=(ld?'L':'M')+f(x)+' '+f(yl+6*Math.sin(x*.03+t*1.4))+' ';}
+  $('liq').setAttribute('d',ld+`L${cx+R+10} ${cy+R+10} L${cx-R-10} ${cy+R+10}Z`);
+  let bl=one(t%4.5);bl=Math.min(bl,one(kt-.05),one(kt-.35));bl=1-(1-bl)*(1-happyS);
+  $('e1').setAttribute('d',eye(cx-20.7,cy,11.3,19.8,happyS,bl));$('e2').setAttribute('d',eye(cx+20.7,cy,11.3,19.8,happyS,bl));
+  $('lab').textContent=label;
+  if(Math.random()<.35*dt)spawn(cx+(Math.random()-.5)*R*1.2,cy+bob+dy+R*.6,0,-(28+Math.random()*30),2+Math.random()*5);
+  for(let i=bubs.length-1;i>=0;i--){const b=bubs[i];b.life+=dt;b.vy-=6*dt;b.vx*=.98;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<12||b.life>6){b.el.remove();bubs.splice(i,1);continue;}b.el.setAttribute('cx',f(b.x+Math.sin(b.life*1.6)*3));b.el.setAttribute('cy',f(b.y));b.el.setAttribute('r',f(b.r));b.el.setAttribute('opacity',f(Math.min(1,b.life*3)*Math.min(1,(b.y-12)/60)));}
+  requestAnimationFrame(frame);}
+function tap(){if(t<appT+.9||(t>byeT&&t<appT))return;tapT=t;SND.tap();spawn(cx+30,cy-40,20,-60,3);}
+function app(){appT=t;byeT=-9;SND.app();}
+function cel(){if(t<appT+.9)return;celT=t;SND.cel();for(let i=0;i<14;i++){const a=Math.PI*(1.1+Math.random()*.8);spawn(cx+Math.cos(a)*R*.9,cy+Math.sin(a)*R*.9,Math.cos(a)*60,-50-Math.random()*70,2+Math.random()*5);}}
+function bye(){if(t<appT+.9||t<byeT+2.6)return;byeT=t;appT=t+2.6;SND.bye();setTimeout(()=>SND.app(),2600);}
+$('tap').onclick=tap;$('stage').onclick=tap;$('app').onclick=app;$('cel').onclick=cel;$('bye').onclick=bye;
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
