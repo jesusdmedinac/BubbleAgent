@@ -53,7 +53,7 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private var chatToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            Button("Menú", systemImage: "line.3.horizontal") { isMenuOpen = true }
+            Button("Menu", systemImage: "line.3.horizontal") { isMenuOpen = true }
         }
         ToolbarItem(placement: .principal) {
             Button { isModelInfoOpen = true } label: {
@@ -67,8 +67,8 @@ struct ContentView: View {
             .tint(.primary)
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
-            Button("Nueva conversación", systemImage: "square.and.pencil") { chat.newConversation() }
-            Button("Perfil", systemImage: "person.crop.circle") { push(ProfileVault.shared) }
+            Button("New conversation", systemImage: "square.and.pencil") { chat.newConversation() }
+            Button("Profile", systemImage: "person.crop.circle") { push(ProfileVault.shared) }
         }
     }
 
@@ -78,12 +78,18 @@ struct ContentView: View {
 }
 
 /// A pushed screen: Compose content with a native title and back button.
-private struct RouteScreen: View {
+struct RouteScreen: View {
     let bridge: BubbleIosBridge
     let route: any BubbleRoute
     let onBack: () -> Void
     @State private var insets = ChromeInsets()
     @State private var isSecurityInfoOpen = false
+
+    init(bridge: BubbleIosBridge, route: any BubbleRoute, onBack: @escaping () -> Void) {
+        self.bridge = bridge
+        self.route = route
+        self.onBack = onBack
+    }
 
     var body: some View {
         ComposeScreenContainer(insets: insets) {
@@ -94,14 +100,14 @@ private struct RouteScreen: View {
         .toolbar {
             if route is ProfileVault {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Seguridad del Vault", systemImage: "lock.shield") { isSecurityInfoOpen = true }
+                    Button("Vault Security", systemImage: "lock.shield") { isSecurityInfoOpen = true }
                 }
             }
         }
-        .alert("Bóveda local cifrada", isPresented: $isSecurityInfoOpen) {
-            Button("Aceptar", role: .cancel) {}
+        .alert("Encrypted Local Vault", isPresented: $isSecurityInfoOpen) {
+            Button("OK", role: .cancel) {}
         } message: {
-            Text("Tus memorias, metas offline y hábitos se guardan solo en este iPhone, dentro del espacio privado de la app.\n\nSin almacenamiento en la nube. Sin rastreo publicitario.")
+            Text("Your memories, offline goals, and habits are stored only on this iPhone, within the app's private sandbox.\n\nZero cloud storage. Zero ad tracking.")
         }
     }
 }

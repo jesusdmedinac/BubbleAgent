@@ -18,10 +18,10 @@ struct PromptBar: View {
                 }
                 .buttonStyle(.plain)
                 .glassEffect(.regular.interactive(), in: .circle)
-                .accessibilityLabel("Adjuntar contexto")
+                .accessibilityLabel("Attach context")
 
                 HStack(alignment: .bottom, spacing: 8) {
-                    TextField("Pregunta a Bubble...", text: $chat.draft, axis: .vertical)
+                    TextField("Ask Bubble...", text: $chat.draft, axis: .vertical)
                         .lineLimit(1...5)
                         .focused($isFocused)
                         .padding(.vertical, 14)
@@ -58,7 +58,7 @@ struct PromptBar: View {
             }
             .buttonStyle(.glassProminent)
             .buttonBorderShape(.circle)
-            .accessibilityLabel("Enviar")
+            .accessibilityLabel("Send")
         } else {
             Button {
                 dictation.toggle(startingFrom: chat.draft) { text in chat.draft = text }
@@ -71,7 +71,7 @@ struct PromptBar: View {
                     .contentShape(.circle)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(dictation.isListening ? "Detener dictado" : "Dictar")
+            .accessibilityLabel(dictation.isListening ? "Stop dictation" : "Dictate")
         }
     }
 }

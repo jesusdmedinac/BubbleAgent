@@ -11,21 +11,21 @@ struct MenuSheet: View {
         NavigationStack {
             List {
                 Section {
-                    Button("Nueva conversación", systemImage: "square.and.pencil") {
+                    Button("New conversation", systemImage: "square.and.pencil") {
                         chat.newConversation()
                         dismiss()
                     }
-                    Button("Tiempo en pantalla y Vault", systemImage: "chart.pie") {
+                    Button("Screen Time & Vault", systemImage: "chart.pie") {
                         onOpen(ProfileVault.shared)
                     }
                 }
                 Section {
-                    comingSoon("Modo de enfoque", systemImage: "moon")
-                    comingSoon("Apps de bienestar", systemImage: "square.grid.2x2")
-                    comingSoon("Retos", systemImage: "trophy")
+                    comingSoon("Focus mode", systemImage: "moon")
+                    comingSoon("Wellness apps", systemImage: "square.grid.2x2")
+                    comingSoon("Challenges", systemImage: "trophy")
                 }
                 if !chat.state.recentConversations.isEmpty {
-                    Section("Recientes") {
+                    Section("Recents") {
                         ForEach(chat.state.recentConversations, id: \.id) { conversation in
                             Button {
                                 chat.selectConversation(conversation)
@@ -49,7 +49,7 @@ struct MenuSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo", systemImage: "checkmark") { dismiss() }
+                    Button("Done", systemImage: "checkmark") { dismiss() }
                 }
             }
         }
@@ -58,7 +58,7 @@ struct MenuSheet: View {
 
     private func comingSoon(_ title: String, systemImage: String) -> some View {
         LabeledContent {
-            Text("Próximamente").font(.caption).foregroundStyle(.secondary)
+            Text("Coming soon").font(.caption).foregroundStyle(.secondary)
         } label: {
             Label(title, systemImage: systemImage)
         }
@@ -81,8 +81,8 @@ struct AttachSheet: View {
                     } label: {
                         Label {
                             VStack(alignment: .leading) {
-                                Text("Tiempo en pantalla de hoy")
-                                Text("Agrega tu uso de hoy al mensaje").font(.caption).foregroundStyle(.secondary)
+                                Text("Today's Screen Time")
+                                Text("Attach today's usage to message").font(.caption).foregroundStyle(.secondary)
                             }
                         } icon: { Image(systemName: "hourglass") }
                     }
@@ -92,21 +92,21 @@ struct AttachSheet: View {
                     } label: {
                         Label {
                             VStack(alignment: .leading) {
-                                Text("Meta de desconexión")
-                                Text("Pide un plan para reducir 30 minutos de redes").font(.caption).foregroundStyle(.secondary)
+                                Text("Disconnect Goal")
+                                Text("Request a plan to reclaim 30 min from social media").font(.caption).foregroundStyle(.secondary)
                             }
                         } icon: { Image(systemName: "target") }
                     }
                 } footer: {
-                    Text("El contexto se queda en tu iPhone; solo se agrega al texto de tu mensaje.")
+                    Text("Context stays on your iPhone; it is only added to your message draft.")
                 }
             }
             .foregroundStyle(.primary)
-            .navigationTitle("Adjuntar contexto")
+            .navigationTitle("Attach Context")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar", systemImage: "xmark") { dismiss() }
+                    Button("Close", systemImage: "xmark") { dismiss() }
                 }
             }
         }
@@ -122,18 +122,18 @@ struct ModelInfoSheet: View {
         NavigationStack {
             List {
                 Section {
-                    LabeledContent("Modelo", value: "Respuestas de prueba")
-                    LabeledContent("Dónde corre", value: "En este iPhone")
-                    LabeledContent("Datos enviados", value: "Ninguno")
+                    LabeledContent("Model", value: "Demo offline engine")
+                    LabeledContent("Runs on", value: "On this iPhone")
+                    LabeledContent("Data sent", value: "None")
                 } footer: {
-                    Text("En iPhone, Bubble usa por ahora respuestas de prueba mientras se integra un modelo local. Tus conversaciones no salen del dispositivo.")
+                    Text("On iPhone, Bubble currently uses demo offline responses while an on-device model is integrated. Your conversations never leave the device.")
                 }
             }
             .navigationTitle("Bubble Local")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo", systemImage: "checkmark") { dismiss() }
+                    Button("Done", systemImage: "checkmark") { dismiss() }
                 }
             }
         }
