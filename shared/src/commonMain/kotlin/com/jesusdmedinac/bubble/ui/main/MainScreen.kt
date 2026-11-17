@@ -67,26 +67,6 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    if (LocalUseNativeNavigation.current) {
-        // The native shell draws the bars, the menu and the sheets; only the chat stays here.
-        Box(modifier = modifier.fillMaxSize().background(BgAmoled)) {
-            MainScreenContent(
-                uiState = uiState,
-                listState = listState,
-                modifier = Modifier.fillMaxSize(),
-                onInputChanged = viewModel::onInputTextChanged,
-                onSendMessage = viewModel::onSendMessage,
-                onOpenSettingsClick = { viewModel.onOpenUsageSettings() },
-                onToggleActivity = viewModel::onToggleActivityCompleted,
-                onSimulateMcpClick = viewModel::simulateGeminiMcpInvocation,
-                onCustomAction = viewModel::onCustomAction,
-                healthSnapshot = healthSnapshot,
-                activities = activities,
-            )
-        }
-        return
-    }
-
     // Back closes the drawer before it leaves the screen.
     NavigationBackHandler(
         state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
@@ -169,7 +149,7 @@ fun MainScreen(
                 .windowInsetsPadding(WindowInsets.navigationBars)
         )
 
-        // 2. Displaced Main App Screen Layer
+    // 2. Displaced Main App Screen Layer (shifts purely from left to right without reducing height)
         val cornerRadius = (32 * progress).dp
         val borderWidth = (2 * progress).dp
 
@@ -178,9 +158,8 @@ fun MainScreen(
                 .fillMaxSize()
                 .graphicsLayer {
                     translationX = (270.dp * progress).toPx()
-                    scaleX = 1f - (0.12f * progress)
-                    scaleY = 1f - (0.12f * progress)
-                    transformOrigin = TransformOrigin(0f, 0.5f)
+                    scaleX = 1f
+                    scaleY = 1f
                     shape = RoundedCornerShape(cornerRadius)
                     clip = progress > 0.01f
                 }
