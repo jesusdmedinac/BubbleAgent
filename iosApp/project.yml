@@ -30,8 +30,8 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIUserInterfaceStyle: Dark
-        NSMicrophoneUsageDescription: Bubble usa el micrófono para dictar tus mensajes.
-        NSSpeechRecognitionUsageDescription: Bubble convierte tu voz en texto para escribir tus mensajes.
+        NSMicrophoneUsageDescription: Bubble uses the microphone to transcribe and dictate your messages.
+        NSSpeechRecognitionUsageDescription: Bubble converts your voice into text to send messages.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jesusdmedinac.bubble

@@ -27,9 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Bubble usa el micrófono para dictar tus mensajes.</string>
+	<string>Bubble uses the microphone to transcribe and dictate your messages.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Bubble convierte tu voz en texto para escribir tus mensajes.</string>
+	<string>Bubble converts your voice into text to send messages.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
