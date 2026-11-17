@@ -1,10 +1,9 @@
 package com.jesusdmedinac.bubble.ui.main
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,10 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -62,85 +65,107 @@ fun MainScreen(
         viewModel.onRefreshUsageStats()
     }
 
-    var isDrawerOpen by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val drawerOffset = remember { Animatable(0f) }
     var isAttachSheetOpen by remember { mutableStateOf(false) }
     var isModelSheetOpen by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
+
+    val springSpec = remember {
+        spring<Float>(
+            dampingRatio = 0.82f,
+            stiffness = 380f
+        )
+    }
+
+    val openDrawer: () -> Unit = {
+        coroutineScope.launch {
+            drawerOffset.animateTo(1f, springSpec)
+        }
+    }
+
+    val closeDrawer: () -> Unit = {
+        coroutineScope.launch {
+            drawerOffset.animateTo(0f, springSpec)
+        }
+    }
+
+    val isDrawerOpen by remember { derivedStateOf { drawerOffset.value > 0.05f } }
 
     // Back closes the drawer before it leaves the screen.
     NavigationBackHandler(
         state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
         isBackEnabled = isDrawerOpen,
-        onBackCompleted = { isDrawerOpen = false },
+        onBackCompleted = { closeDrawer() },
     )
 
-    val progress by animateFloatAsState(
-        targetValue = if (isDrawerOpen) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = 0.82f,
-            stiffness = 380f
-        ),
-        label = "drawer_displacement"
-    )
+    val density = LocalDensity.current
+    val maxDisplacementPx = with(density) { 270.dp.toPx() }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(BgAmoled)
-            .pointerInput(isDrawerOpen) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    if (dragAmount > 25 && !isDrawerOpen) {
-                        isDrawerOpen = true
-                    } else if (dragAmount < -25 && isDrawerOpen) {
-                        isDrawerOpen = false
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        val target = if (drawerOffset.value > 0.35f) 1f else 0f
+                        coroutineScope.launch {
+                            drawerOffset.animateTo(target, springSpec)
+                        }
+                    }
+                ) { change, dragAmount ->
+                    change.consume()
+                    val delta = dragAmount / maxDisplacementPx
+                    coroutineScope.launch {
+                        drawerOffset.snapTo((drawerOffset.value + delta).coerceIn(0f, 1f))
                     }
                 }
             }
     ) {
         // 1. Drawer Layer (Left side navigation pane)
         BubbleMenuDrawer(
-            onClose = { isDrawerOpen = false },
+            onClose = closeDrawer,
             onNewConversation = {
-                isDrawerOpen = false
+                closeDrawer()
                 viewModel.onNewChatClicked()
             },
             onFocusModeClick = {
-                isDrawerOpen = false
+                closeDrawer()
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar("Modo de Enfoque próximamente en la v1.2")
                 }
             },
             onAppsClick = {
-                isDrawerOpen = false
+                closeDrawer()
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar("Gestor de aplicaciones de bienestar disponible en la v1.2")
                 }
             },
             onChallengesClick = {
-                isDrawerOpen = false
+                closeDrawer()
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar("Retos de desconexión comunitaria disponibles en la v1.2")
                 }
             },
             onScreenTimeClick = {
-                isDrawerOpen = false
+                closeDrawer()
                 onProfileClick()
             },
             onConversationClick = { convId ->
-                isDrawerOpen = false
+                closeDrawer()
                 viewModel.onSelectConversation(convId)
             },
             onRecentQueryClick = { query ->
-                isDrawerOpen = false
+                closeDrawer()
                 viewModel.onSelectConversationByTitle(query)
             },
             onProfileClick = {
-                isDrawerOpen = false
+                closeDrawer()
                 onProfileClick()
             },
             onSettingsClick = {
-                isDrawerOpen = false
+                closeDrawer()
                 viewModel.onOpenUsageSettings()
             },
             userName = uiState.userName,
@@ -152,39 +177,49 @@ fun MainScreen(
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .graphicsLayer {
-                    translationX = (-50.dp * (1f - progress)).toPx()
-                    alpha = (0.2f + 0.8f * progress).coerceIn(0f, 1f)
+                    val p = drawerOffset.value
+                    translationX = -50.dp.toPx() * (1f - p)
+                    alpha = (0.2f + 0.8f * p).coerceIn(0f, 1f)
                 }
         )
 
-    // 2. Displaced Main App Screen Layer (shifts purely from left to right without reducing height)
-        val cornerRadius = (32 * progress).dp
-        val borderWidth = (2 * progress).dp
-
+        // 2. Displaced Main App Screen Layer (shifts purely from left to right without reducing height)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    translationX = (270.dp * progress).toPx()
+                    val p = drawerOffset.value
+                    translationX = maxDisplacementPx * p
                     scaleX = 1f
                     scaleY = 1f
-                    shadowElevation = (20.dp * progress).toPx()
-                    shape = RoundedCornerShape(cornerRadius)
-                    clip = progress > 0.01f
+                    shadowElevation = 20.dp.toPx() * p
+                    shape = RoundedCornerShape(32.dp * p)
+                    clip = p > 0.001f
                 }
-                .then(
-                    if (progress > 0.01f) {
-                        Modifier
-                            .clip(RoundedCornerShape(cornerRadius))
-                            .border(borderWidth, BubbleCyan, RoundedCornerShape(cornerRadius))
-                    } else Modifier
-                )
+                .drawWithContent {
+                    drawContent()
+                    val p = drawerOffset.value
+                    if (p > 0.01f) {
+                        drawRect(
+                            color = Color.Black.copy(alpha = 0.35f * p)
+                        )
+                        val corner = (32.dp * p).toPx()
+                        val stroke = (2.dp * p).toPx()
+                        drawRoundRect(
+                            color = BubbleCyan,
+                            cornerRadius = CornerRadius(corner, corner),
+                            style = Stroke(width = stroke)
+                        )
+                    }
+                }
         ) {
             MainScreenContent(
                 uiState = uiState,
                 listState = listState,
                 modifier = Modifier.fillMaxSize(),
-                onMenuClick = { isDrawerOpen = !isDrawerOpen },
+                onMenuClick = {
+                    if (drawerOffset.value > 0.5f) closeDrawer() else openDrawer()
+                },
                 onRefreshUsageStats = viewModel::onRefreshUsageStats,
                 onModelSelect = { isModelSheetOpen = true },
                 onNewChat = viewModel::onNewChatClicked,
@@ -205,17 +240,16 @@ fun MainScreen(
                 activities = activities,
             )
 
-            // Dimming scrim when open: Clicking outside closes the drawer
-            if (progress > 0.01f) {
+            // Dimming scrim click catcher when open: Clicking outside closes the drawer
+            if (isDrawerOpen) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.35f * progress))
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
-                            isDrawerOpen = false
+                            closeDrawer()
                         }
                 )
             }
