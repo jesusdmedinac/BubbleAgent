@@ -1,8 +1,8 @@
 package com.jesusdmedinac.bubble.ui.main
 
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -76,7 +77,10 @@ fun MainScreen(
 
     val progress by animateFloatAsState(
         targetValue = if (isDrawerOpen) 1f else 0f,
-        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = 0.82f,
+            stiffness = 380f
+        ),
         label = "drawer_displacement"
     )
 
@@ -147,6 +151,10 @@ fun MainScreen(
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .windowInsetsPadding(WindowInsets.navigationBars)
+                .graphicsLayer {
+                    translationX = (-50.dp * (1f - progress)).toPx()
+                    alpha = (0.2f + 0.8f * progress).coerceIn(0f, 1f)
+                }
         )
 
     // 2. Displaced Main App Screen Layer (shifts purely from left to right without reducing height)
@@ -160,6 +168,7 @@ fun MainScreen(
                     translationX = (270.dp * progress).toPx()
                     scaleX = 1f
                     scaleY = 1f
+                    shadowElevation = (20.dp * progress).toPx()
                     shape = RoundedCornerShape(cornerRadius)
                     clip = progress > 0.01f
                 }
@@ -175,7 +184,7 @@ fun MainScreen(
                 uiState = uiState,
                 listState = listState,
                 modifier = Modifier.fillMaxSize(),
-                onMenuClick = { isDrawerOpen = true },
+                onMenuClick = { isDrawerOpen = !isDrawerOpen },
                 onRefreshUsageStats = viewModel::onRefreshUsageStats,
                 onModelSelect = { isModelSheetOpen = true },
                 onNewChat = viewModel::onNewChatClicked,
@@ -196,18 +205,12 @@ fun MainScreen(
                 activities = activities,
             )
 
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 90.dp)
-            )
-
-            // When drawer is open, clicking on the displaced app returns to full screen
-            if (progress > 0.05f) {
+            // Dimming scrim when open: Clicking outside closes the drawer
+            if (progress > 0.01f) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.35f * progress))
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
@@ -216,6 +219,13 @@ fun MainScreen(
                         }
                 )
             }
+
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 90.dp)
+            )
         }
 
         // 3. Bottom Sheets
